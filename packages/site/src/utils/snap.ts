@@ -85,4 +85,17 @@ export const getTariWalletToken = async () => {
   });
 };
 
+export const getTariWalletPublicKey = async (token: string) => {
+  return window.ethereum.request({
+    method: 'wallet_invokeSnap',
+    params: {
+      snapId: defaultSnapOrigin,
+      request: {
+        method: 'getWalletPublicKey',
+        params: { token }
+      }
+    },
+  });
+};
+
 export const isLocalSnap = (snapId: string) => snapId.startsWith('local:');

@@ -1,7 +1,7 @@
 import { Json, JsonRpcRequest, OnRpcRequestHandler } from '@metamask/snaps-types';
 import { panel, text } from '@metamask/snaps-ui';
 import { getState, setState } from './state';
-import { GetWalletTokenParams, SetWalletParams } from './types';
+import { GetWalletPublicKeyParams, GetWalletTokenParams, SetWalletParams } from './types';
 import * as walletClient from './tari_wallet_client';
 
 async function setWallet(request: JsonRpcRequest<Json[] | Record<string, Json>>) {
@@ -61,6 +61,29 @@ async function getWalletToken(request: JsonRpcRequest<Json[] | Record<string, Js
   return;
 }
 
+async function getWalletPublicKey(request: JsonRpcRequest<Json[] | Record<string, Json>>) {
+  const params = request.params as GetWalletPublicKeyParams;
+  const { token } = params;
+
+  const state = await getState();
+  const { tari_wallet_daemon_url } = state;
+  if (!tari_wallet_daemon_url) {
+    await snap.request({
+      method: 'snap_dialog',
+      params: {
+        type: 'alert',
+        content: panel([
+          text('There is no Tari wallet configured in Metamask.'),
+        ]),
+      },
+    });
+    return;
+  }
+  
+  const public_key = await walletClient.getWalletPublicKey(tari_wallet_daemon_url, token);
+  return public_key;
+}
+
 /**
  * Handle incoming JSON-RPC requests, sent through `wallet_invokeSnap`.
  *
@@ -105,6 +128,8 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request }) => 
       return setWallet(request);
     case 'getWalletToken':
       return getWalletToken(request);
+    case 'getWalletPublicKey':
+      return getWalletPublicKey(request);
     default:
       throw new Error('Method not found.');
   }

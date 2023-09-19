@@ -5,6 +5,7 @@ import {
   connectSnap,
   getSnap,
   getTariWallet,
+  getTariWalletPublicKey,
   getTariWalletToken,
   isLocalSnap,
   sendHello,
@@ -148,6 +149,18 @@ const Index = () => {
     try {
       const token = await getTariWalletToken();
       console.log({token});
+      window.tariToken = token;
+    } catch (e) {
+      console.error(e);
+      dispatch({ type: MetamaskActions.SetError, payload: e });
+    }
+  };
+
+  const handleGetTariWalletPublicKeyClick = async () => {
+    try {
+      console.log({tariToken: window.tariToken});
+      const key = await getTariWalletPublicKey(window.tariToken);
+      console.log({key});
     } catch (e) {
       console.error(e);
       dispatch({ type: MetamaskActions.SetError, payload: e });
@@ -257,6 +270,25 @@ const Index = () => {
             button: (
               <SendHelloButton
                 onClick={handleGetTariWalletTokenClick}
+                disabled={!state.installedSnap}
+              />
+            ),
+          }}
+          disabled={!state.installedSnap}
+          fullWidth={
+            isMetaMaskReady &&
+            Boolean(state.installedSnap) &&
+            !shouldDisplayReconnectButton(state.installedSnap)
+          }
+        />
+        <Card
+          content={{
+            title: 'Get Tari public key',
+            description:
+              '',
+            button: (
+              <SendHelloButton
+                onClick={handleGetTariWalletPublicKeyClick}
                 disabled={!state.installedSnap}
               />
             ),

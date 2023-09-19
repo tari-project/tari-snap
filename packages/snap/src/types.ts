@@ -15,3 +15,7 @@ export type TariPermission =
     "TransactionGet" |
     { "TransactionSend": null } |
     { "GetNft": [null, null] };
+
+export type GetWalletPublicKeyParams = {
+    token: string;
+};
