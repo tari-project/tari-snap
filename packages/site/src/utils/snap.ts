@@ -59,7 +59,21 @@ export const getSnap = async (version?: string): Promise<Snap | undefined> => {
 export const sendHello = async () => {
   await window.ethereum.request({
     method: 'wallet_invokeSnap',
-    params: { snapId: defaultSnapOrigin, request: { method: 'hello' } },
+    params: { snapId: defaultSnapOrigin, request: { method: 'hello2' } },
+  });
+};
+
+export const setTariWallet = async () => {
+  await window.ethereum.request({
+    method: 'wallet_invokeSnap',
+    params: { snapId: defaultSnapOrigin, request: { method: 'setTariWallet', params: { tari_wallet_daemon_url: "http://127.0.0.1:9000" } } },
+  });
+};
+
+export const getTariWallet = async () => {
+  await window.ethereum.request({
+    method: 'wallet_invokeSnap',
+    params: { snapId: defaultSnapOrigin, request: { method: 'getTariWallet' } },
   });
 };
 

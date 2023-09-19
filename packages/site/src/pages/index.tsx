@@ -4,8 +4,10 @@ import { MetamaskActions, MetaMaskContext } from '../hooks';
 import {
   connectSnap,
   getSnap,
+  getTariWallet,
   isLocalSnap,
   sendHello,
+  setTariWallet,
   shouldDisplayReconnectButton,
 } from '../utils';
 import {
@@ -132,6 +134,24 @@ const Index = () => {
     }
   };
 
+  const handleSetTariWalletClick = async () => {
+    try {
+      await setTariWallet();
+    } catch (e) {
+      console.error(e);
+      dispatch({ type: MetamaskActions.SetError, payload: e });
+    }
+  };
+
+  const handleGetTariWalletClick = async () => {
+    try {
+      await getTariWallet();
+    } catch (e) {
+      console.error(e);
+      dispatch({ type: MetamaskActions.SetError, payload: e });
+    }
+  };
+
   return (
     <Container>
       <Heading>
@@ -197,6 +217,44 @@ const Index = () => {
             button: (
               <SendHelloButton
                 onClick={handleSendHelloClick}
+                disabled={!state.installedSnap}
+              />
+            ),
+          }}
+          disabled={!state.installedSnap}
+          fullWidth={
+            isMetaMaskReady &&
+            Boolean(state.installedSnap) &&
+            !shouldDisplayReconnectButton(state.installedSnap)
+          }
+        />
+        <Card
+          content={{
+            title: 'Set Tari wallet',
+            description:
+              '',
+            button: (
+              <SendHelloButton
+                onClick={handleSetTariWalletClick}
+                disabled={!state.installedSnap}
+              />
+            ),
+          }}
+          disabled={!state.installedSnap}
+          fullWidth={
+            isMetaMaskReady &&
+            Boolean(state.installedSnap) &&
+            !shouldDisplayReconnectButton(state.installedSnap)
+          }
+        />
+        <Card
+          content={{
+            title: 'Get Tari wallet',
+            description:
+              '',
+            button: (
+              <SendHelloButton
+                onClick={handleGetTariWalletClick}
                 disabled={!state.installedSnap}
               />
             ),
