@@ -5,6 +5,7 @@ import {
   connectSnap,
   getSnap,
   getTariWallet,
+  getTariWalletToken,
   isLocalSnap,
   sendHello,
   setTariWallet,
@@ -143,9 +144,10 @@ const Index = () => {
     }
   };
 
-  const handleGetTariWalletClick = async () => {
+  const handleGetTariWalletTokenClick = async () => {
     try {
-      await getTariWallet();
+      const token = await getTariWalletToken();
+      console.log({token});
     } catch (e) {
       console.error(e);
       dispatch({ type: MetamaskActions.SetError, payload: e });
@@ -247,14 +249,14 @@ const Index = () => {
             !shouldDisplayReconnectButton(state.installedSnap)
           }
         />
-        <Card
+         <Card
           content={{
-            title: 'Get Tari wallet',
+            title: 'Get Tari wallet token',
             description:
               '',
             button: (
               <SendHelloButton
-                onClick={handleGetTariWalletClick}
+                onClick={handleGetTariWalletTokenClick}
                 disabled={!state.installedSnap}
               />
             ),
