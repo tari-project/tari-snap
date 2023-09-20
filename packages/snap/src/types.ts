@@ -19,3 +19,13 @@ export type TariPermission =
 export type GetWalletPublicKeyParams = {
     token: string;
 };
+
+export type SendWalletRequestParams = {
+    token: string,
+    walletRequest: WalletRequest
+};
+
+export type WalletRequest = {
+    method: string,
+    params: Object
+};

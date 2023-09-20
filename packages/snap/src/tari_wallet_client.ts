@@ -1,4 +1,4 @@
-import { TariPermission } from "./types";
+import { TariPermission, WalletRequest } from "./types";
 
 export async function tariWalletRequest(tari_wallet_daemon_url: string, token: string | null, method: string, params: any) {
     const baseUrl = `${tari_wallet_daemon_url}/json_rpc`;
@@ -50,11 +50,8 @@ export async function getWalletToken(tari_wallet_daemon_url: string, permissions
     return permissions_token;
 }
 
-export async function  getWalletPublicKey(tari_wallet_daemon_url: string, token: string) {
-    const response = await tariWalletRequest(tari_wallet_daemon_url, token, 'keys.list', {});
-    const { keys } = response;
-    // keys are in array form: [id, public_key_hex, isActive]
-    // and only the current selected key will have "isActive" (index 2) as true
-    const key = keys.filter((k: any[]) => k[2]);
-    return key;
+export async function sendWalletRequest(tari_wallet_daemon_url: string, token: string, walletRequest: WalletRequest) {
+    const { method, params } = walletRequest;
+    const response = await tariWalletRequest(tari_wallet_daemon_url, token, method, params);
+    return response;
 }

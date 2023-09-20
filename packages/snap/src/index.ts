@@ -1,7 +1,7 @@
 import { Json, JsonRpcRequest, OnRpcRequestHandler } from '@metamask/snaps-types';
 import { panel, text } from '@metamask/snaps-ui';
 import { getState, setState } from './state';
-import { GetWalletPublicKeyParams, GetWalletTokenParams, SetWalletParams } from './types';
+import { GetWalletPublicKeyParams, GetWalletTokenParams, SendWalletRequestParams, SetWalletParams } from './types';
 import * as walletClient from './tari_wallet_client';
 
 async function setWallet(request: JsonRpcRequest<Json[] | Record<string, Json>>) {
@@ -61,9 +61,9 @@ async function getWalletToken(request: JsonRpcRequest<Json[] | Record<string, Js
   return;
 }
 
-async function getWalletPublicKey(request: JsonRpcRequest<Json[] | Record<string, Json>>) {
-  const params = request.params as GetWalletPublicKeyParams;
-  const { token } = params;
+async function sendWalletRequest(request: JsonRpcRequest<Json[] | Record<string, Json>>) {
+  const params = request.params as unknown as SendWalletRequestParams;
+  const { token, walletRequest} = params;
 
   const state = await getState();
   const { tari_wallet_daemon_url } = state;
@@ -79,9 +79,9 @@ async function getWalletPublicKey(request: JsonRpcRequest<Json[] | Record<string
     });
     return;
   }
-  
-  const public_key = await walletClient.getWalletPublicKey(tari_wallet_daemon_url, token);
-  return public_key;
+
+  const response = walletClient.sendWalletRequest(tari_wallet_daemon_url, token, walletRequest);
+  return response;
 }
 
 /**
@@ -96,40 +96,12 @@ async function getWalletPublicKey(request: JsonRpcRequest<Json[] | Record<string
  */
 export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request }) => {
   switch (request.method) {
-    case 'hello':
-      return snap.request({
-        method: 'snap_dialog',
-        params: {
-          type: 'confirmation',
-          content: panel([
-            text(`Hello, **${origin}**!!`),
-            text('This custom confirmation is just for display purposes.'),
-            text(
-              'But you can edit the snap source code to make it do something, if you want to!',
-            ),
-          ]),
-        },
-      });
-    case 'hello2':
-      return snap.request({
-        method: 'snap_dialog',
-        params: {
-          type: 'confirmation',
-          content: panel([
-            text(`Hello, **${origin}**!!!!!`),
-            text('This custom confirmation is just for display purposes.'),
-            text(
-              'But you can edit the snap source code to make it do something, if you want to!',
-            ),
-          ]),
-        },
-      });
     case 'setWallet':
       return setWallet(request);
     case 'getWalletToken':
       return getWalletToken(request);
-    case 'getWalletPublicKey':
-      return getWalletPublicKey(request);
+    case 'sendWalletRequest':
+      return sendWalletRequest(request);
     default:
       throw new Error('Method not found.');
   }
