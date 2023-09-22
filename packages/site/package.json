@@ -25,7 +25,12 @@
     ]
   },
   "dependencies": {
+    "@emotion/react": "latest",
+    "@emotion/styled": "latest",
     "@metamask/providers": "^9.0.0",
+    "@mui/icons-material": "latest",
+    "@mui/material": "latest",
+    "qrcode.react": "^3.1.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-is": "^18.2.0",
