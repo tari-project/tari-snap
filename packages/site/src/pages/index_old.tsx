@@ -105,6 +105,7 @@ const ErrorMessage = styled.div`
 `;
 
 const Index = () => {
+  const [metamaskState, metamaskDispatch] = useContext(MetaMaskContext);
   const [state, dispatch] = useContext(MetaMaskContext);
 
   const isMetaMaskReady = isLocalSnap(defaultSnapOrigin)

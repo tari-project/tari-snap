@@ -1,8 +1,9 @@
 import { ComponentProps } from 'react';
 import styled from 'styled-components';
-import { MetamaskState } from '../hooks';
+import { MetamaskActions, MetamaskState } from '../hooks';
 import { ReactComponent as FlaskFox } from '../assets/flask_fox.svg';
-import { shouldDisplayReconnectButton } from '../utils';
+import { getTariWalletToken, setTariWallet, shouldDisplayReconnectButton } from '../utils';
+import Stack from '@mui/material/Stack';
 
 const Link = styled.a`
   display: flex;
@@ -99,22 +100,35 @@ export const SendHelloButton = (props: ComponentProps<typeof Button>) => {
 };
 
 export const HeaderButtons = ({
-  state,
+  metamaskState,
+  metamaskDispatch,
   onConnectClick,
+  onTariWalletClick,
+  onTariTokenClick,
 }: {
   state: MetamaskState;
   onConnectClick(): unknown;
 }) => {
-  if (!state.isFlask && !state.installedSnap) {
+  if (!metamaskState.isFlask && !metamaskState.installedSnap) {
     return <InstallFlaskButton />;
   }
 
-  if (!state.installedSnap) {
+  if (!metamaskState.installedSnap) {
     return <ConnectButton onClick={onConnectClick} />;
   }
 
-  if (shouldDisplayReconnectButton(state.installedSnap)) {
-    return <ReconnectButton onClick={onConnectClick} />;
+  if (shouldDisplayReconnectButton(metamaskState.installedSnap)) {
+    return (
+      <Stack direction="row" spacing={2}>
+        <ReconnectButton onClick={onConnectClick} />
+        <Button onClick={onTariWalletClick}>
+          Configure Tari Wallet Daemon
+        </Button>
+        <Button onClick={onTariTokenClick}>
+          Connect Tari Wallet Daemon
+        </Button>
+      </Stack>
+    );
   }
 
   return (
@@ -124,3 +138,4 @@ export const HeaderButtons = ({
     </ConnectedContainer>
   );
 };
+

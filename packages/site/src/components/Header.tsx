@@ -1,8 +1,8 @@
 import { useContext } from 'react';
 import styled, { useTheme } from 'styled-components';
-import { MetamaskActions, MetaMaskContext } from '../hooks';
-import { connectSnap, getThemePreference, getSnap } from '../utils';
-import { HeaderButtons } from './Buttons';
+import { MetamaskActions, MetaMaskContext, TariActions, TariContext } from '../hooks';
+import { connectSnap, getThemePreference, getSnap, getTariWalletToken, setTariWallet } from '../utils';
+import { HeaderButtons, SendHelloButton } from './Buttons';
 import { SnapLogo } from './SnapLogo';
 import { Toggle } from './Toggle';
 
@@ -43,22 +43,51 @@ export const Header = ({
   handleToggleClick(): void;
 }) => {
   const theme = useTheme();
-  const [state, dispatch] = useContext(MetaMaskContext);
+  const [metamaskState, metamaskDispatch] = useContext(MetaMaskContext);
+  const [tariState, tariDispatch] = useContext(TariContext);
 
-  const handleConnectClick = async () => {
+  const handleMetamaskConnectClick = async () => {
     try {
       await connectSnap();
       const installedSnap = await getSnap();
 
-      dispatch({
+      metamaskDispatch({
         type: MetamaskActions.SetInstalled,
         payload: installedSnap,
       });
     } catch (e) {
       console.error(e);
-      dispatch({ type: MetamaskActions.SetError, payload: e });
+      metamaskDispatch({ type: MetamaskActions.SetError, payload: e });
     }
   };
+
+  const handleSetTariWalletClick = async () => {
+    try {
+      let wallet_daemon_url = await setTariWallet();
+      tariDispatch({
+        type: TariActions.SetWalletDaemonUrl,
+        payload: wallet_daemon_url,
+      });
+    } catch (e) {
+      console.error(e);
+      metamaskDispatch({ type: MetamaskActions.SetError, payload: e });
+    }
+  };
+  
+  const handleConnectWalletClick = async () => {
+    try {
+      const token = await getTariWalletToken();
+      console.log({token});
+      tariDispatch({
+        type: TariActions.SetToken,
+        payload: token,
+      });
+    } catch (e) {
+      console.error(e);
+      metamaskDispatch({ type: MetamaskActions.SetError, payload: e });
+    }
+  };
+
   return (
     <HeaderWrapper>
       <LogoWrapper>
@@ -66,11 +95,10 @@ export const Header = ({
         <Title>Tari Web Wallet</Title>
       </LogoWrapper>
       <RightContainer>
-        <Toggle
-          onToggle={handleToggleClick}
-          defaultChecked={getThemePreference()}
-        />
-        <HeaderButtons state={state} onConnectClick={handleConnectClick} />
+        <HeaderButtons
+          metamaskState={metamaskState} metamaskDispatch={(v) => metamaskDispatch(v)} onConnectClick={handleMetamaskConnectClick}
+          onTariWalletClick={handleSetTariWalletClick}
+          onTariTokenClick={handleConnectWalletClick}/>
       </RightContainer>
     </HeaderWrapper>
   );

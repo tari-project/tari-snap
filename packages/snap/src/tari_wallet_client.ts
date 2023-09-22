@@ -32,20 +32,40 @@ export async function tariWalletRequest(tari_wallet_daemon_url: string, token: s
 
 export async function getWalletToken(tari_wallet_daemon_url: string, permissions: Array<TariPermission>) {
     // 1. auth.request
-    const authRequestParams = {
-        permissions: ["AccountInfo", "KeyList", "TransactionGet", {"TransactionSend": null}],
+    let authRequestParams = {
+        permissions: ["AccountInfo"],
         duration: null,
     };
-    const authRequestResponse = await tariWalletRequest(tari_wallet_daemon_url, null, 'auth.request', authRequestParams);
-    const { auth_token } = authRequestResponse;
+    let authRequestResponse = await tariWalletRequest(tari_wallet_daemon_url, null, 'auth.request', authRequestParams);
+    let { auth_token } = authRequestResponse;
 
     // 2. auth.accept
-    const authAcceptParams = {
+    let authAcceptParams = {
         auth_token,
         name: 'tari-snap',
     };
-    const authAcceptResponse = await tariWalletRequest(tari_wallet_daemon_url, null, 'auth.accept', authAcceptParams);
-    const { permissions_token } = authAcceptResponse;
+    let authAcceptResponse = await tariWalletRequest(tari_wallet_daemon_url, null, 'auth.accept', authAcceptParams);
+    let { permissions_token } = authAcceptResponse;
+
+    // 3. get default account address
+    const accountGetDefault = await tariWalletRequest(tari_wallet_daemon_url, permissions_token, 'accounts.get_default', {});
+    const accountAddress = accountGetDefault.account.address.Component;
+
+    // 4. request a new token with the permission to get account balances
+    authRequestParams = {
+        permissions: ["AccountInfo", {"AccountBalance": { "Component": accountAddress}}, "KeyList", "TransactionGet", {"TransactionSend": null}],
+        duration: null,
+    };
+    authRequestResponse = await tariWalletRequest(tari_wallet_daemon_url, null, 'auth.request', authRequestParams);
+    auth_token = authRequestResponse.auth_token;
+
+    // 5. accept the token
+    authAcceptParams = {
+        auth_token,
+        name: 'tari-snap',
+    };
+    authAcceptResponse = await tariWalletRequest(tari_wallet_daemon_url, null, 'auth.accept', authAcceptParams);
+    permissions_token = authAcceptResponse.permissions_token;
 
     return permissions_token;
 }

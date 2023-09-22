@@ -14,30 +14,30 @@ import IconButton from "@mui/material/IconButton";
 import Button from "@mui/material/Button";
 import { QRCodeSVG } from 'qrcode.react';
 
-const token = "Tari";
-const address = "fooo"
-
 export interface SendDialogProps {
+    address?: string,
     open: boolean;
     onClose: () => void;
 }
 
 export function ReceiveDialog(props: SendDialogProps) {
-    const { onClose, open } = props;
+    const { address, onClose, open } = props;
 
     const handleClose = () => {
         onClose();
     };
 
     const handleCopyClick = async () => {
-        navigator.clipboard.writeText(address);
+        if(address) {
+            navigator.clipboard.writeText(address);
+        }
     };
 
     return (
         <Dialog fullWidth={true} onClose={handleClose} open={open}>
             <Box sx={{ padding: 4, borderRadius: 4 }}>
                 <Stack direction="row" justifyContent="space-between" spacing={2}>
-                    <Typography style={{ fontSize: 24 }}>Receive {token}</Typography>
+                    <Typography style={{ fontSize: 24 }}>Receive</Typography>
                     <IconButton aria-label="copy" onClick={handleClose}>
                         <CloseIcon style={{ fontSize: 24 }} />
                     </IconButton>
@@ -47,7 +47,7 @@ export function ReceiveDialog(props: SendDialogProps) {
                     <QRCodeSVG value={address} />
                 </Stack>
                 <Stack direction="row" justifyContent="center">
-                    <Typography sx={{ mt: 4, fontSize: 12, }}>Your {token} address</Typography>
+                    <Typography sx={{ mt: 4, fontSize: 12, }}>Your address</Typography>
                 </Stack>           
                 <Stack direction="row" justifyContent="center">
                     <Typography sx={{ mt: 2, fontSize: 24, }}>{address}</Typography>

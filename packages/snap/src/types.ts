@@ -6,15 +6,7 @@ export type GetWalletTokenParams = {
     permissions: Array<TariPermission>;
 };
 
-export type TariPermission =
-    { "GetOwnershipProof": null } |
-    "AccountBalance" |
-    "AccountInfo" |
-    "AccountList" |
-    "KeyList" |
-    "TransactionGet" |
-    { "TransactionSend": null } |
-    { "GetNft": [null, null] };
+export type TariPermission = Object;
 
 export type GetWalletPublicKeyParams = {
     token: string;

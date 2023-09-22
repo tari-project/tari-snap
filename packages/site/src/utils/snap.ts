@@ -64,10 +64,12 @@ export const sendHello = async () => {
 };
 
 export const setTariWallet = async () => {
+  let tari_wallet_daemon_url = "http://127.0.0.1:9000";
   await window.ethereum.request({
     method: 'wallet_invokeSnap',
-    params: { snapId: defaultSnapOrigin, request: { method: 'setWallet', params: { tari_wallet_daemon_url: "http://127.0.0.1:9000" } } },
+    params: { snapId: defaultSnapOrigin, request: { method: 'setWallet', params: { tari_wallet_daemon_url } } },
   });
+  return tari_wallet_daemon_url;
 };
 
 export const getTariWalletToken = async () => {
