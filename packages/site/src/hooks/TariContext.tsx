@@ -34,7 +34,6 @@ export enum TariActions {
 }
 
 const reducer: Reducer<TariState, TariDispatch> = (state, action) => {
-  console.log("tari dispatch");
   switch (action.type) {
     case TariActions.SetWalletDaemonUrl:
       return {

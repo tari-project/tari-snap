@@ -52,17 +52,6 @@ export const getSnap = async (version?: string): Promise<Snap | undefined> => {
   }
 };
 
-/**
- * Invoke the "hello" method from the example snap.
- */
-
-export const sendHello = async () => {
-  await window.ethereum.request({
-    method: 'wallet_invokeSnap',
-    params: { snapId: defaultSnapOrigin, request: { method: 'hello2' } },
-  });
-};
-
 export const setTariWallet = async () => {
   let tari_wallet_daemon_url = "http://127.0.0.1:9000";
   await window.ethereum.request({

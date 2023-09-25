@@ -5,7 +5,6 @@ import {
   getSnap,
   getTariWalletToken,
   isLocalSnap,
-  sendHello,
   sendWalletRequest,
   setTariWallet,
   shouldDisplayReconnectButton,
@@ -40,6 +39,7 @@ const Index = () => {
   const [tariState, tariDispatch] = useContext(TariContext);
 
   const [accountAddress, setAccountAddress] = React.useState(null);
+  const [accountName, setAccountName] = React.useState(null);
   const [accountPublicKey, setAccountPublicKey] = React.useState(null);
   const [accountBalances, setAccountBalances] = React.useState(null);
 
@@ -87,7 +87,8 @@ const Index = () => {
   const refreshAccountData = async () => {
     const accountData = await getAccount();
     setAccountAddress(accountData.account.address.Component);
-    setAccountPublicKey(accountData.account.public_key);
+    setAccountName(accountData.account.name);
+    setAccountPublicKey(accountData.public_key);
 
     const balanceData = await getBalances();
     let balances = balanceData.balances.map(b => { return({ name: b.token_symbol ||  "Tari", address: b.resource_address, balance: b.balance});});
@@ -174,21 +175,19 @@ const Index = () => {
     setReceiveDialogOpen(false);
   };
 
-
-
   return (
     <Container>
       <Paper variant="outlined" elevation={0} sx={{ mt: 4, padding: 2, paddingLeft: 4, paddingRight: 4, borderRadius: 4 }}>
         <Stack direction="row" justifyContent="space-between" spacing={2}>
           <Box>
             <Typography style={{ fontSize: 12 }} >
-              Account name
+              {accountName}
             </Typography>
             <Stack direction="row" alignItems="center" justifyContent="center">
               <Typography style={{ fontSize: 15 }} >
-                {accountAddress}
+                {accountPublicKey}
               </Typography>
-              <IconButton aria-label="copy" onClick={() => handleCopyClick(accountAddress)}>
+              <IconButton aria-label="copy" onClick={() => handleCopyClick(accountPublicKey)}>
                 <ContentCopyIcon />
               </IconButton>
             </Stack>
@@ -247,7 +246,7 @@ const Index = () => {
         onClose={handleSendDialogClose}
       />
       <ReceiveDialog
-        address={accountAddress}
+        address={accountPublicKey}
         open={receiveDialogOpen}
         onClose={handleReceiveDialogClose}
       />
