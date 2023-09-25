@@ -140,16 +140,6 @@ const Index = () => {
     }
   };
 
-  function createData(
-    name: string,
-    calories: number,
-    fat: number,
-    carbs: number,
-    protein: number,
-  ) {
-    return { name, calories, fat, carbs, protein };
-  }
-
   const handleCopyClick = async (text: string) => {
     navigator.clipboard.writeText(text);
   };
