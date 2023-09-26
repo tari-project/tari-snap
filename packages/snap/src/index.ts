@@ -70,7 +70,7 @@ async function requestUserConfirmation(req: WalletRequest) {
   }
 
   // fund transfer methods always require explicit user confirmation
-  const transferMethods = ['accounts.transfer', 'accounts.transfer'];
+  const transferMethods = ['accounts.transfer', 'accounts.confidential_transfer'];
   if (transferMethods.includes(req.method)) {
     return await snap.request({
       method: 'snap_dialog',
@@ -89,7 +89,7 @@ async function requestUserConfirmation(req: WalletRequest) {
   }
 
   // template/component calls
-  if (req.method === 'transactions.send') {
+  if (req.method === 'transactions.submit') {
     return await snap.request({
       method: 'snap_dialog',
       params: {
@@ -107,9 +107,39 @@ async function requestUserConfirmation(req: WalletRequest) {
   return false;
 }
 
+async function showTransactionNotification(req: WalletRequest, res: Object) {
+  const transactionMethods = ['transaction.submit', 'accounts.transfer', 'accounts.confidential_transfer'];
+  if (transactionMethods.includes(req.method)) {
+    if (res && res.transaction_id) {
+      // TODO: use "snap_notify" (it was not working for me when I developed this)
+      await snap.request({
+        method: 'snap_dialog',
+        params: {
+          type: 'alert',
+          content: panel([
+            heading('Transaction "' + res.transaction_id + '" confirmed'),
+          ]),
+        },
+      });
+    } else {
+      // TODO: show error details
+      // TODO: use "snap_notify" (it was not working for me when I developed this)
+      await snap.request({
+        method: 'snap_dialog',
+        params: {
+          type: 'alert',
+          content: panel([
+            heading('An error occurred'),
+          ]),
+        },
+      });
+    }
+  }
+}
+
 async function sendWalletRequest(request: JsonRpcRequest<Json[] | Record<string, Json>>) {
   const params = request.params as unknown as SendWalletRequestParams;
-  const { token, walletRequest} = params;
+  const { token, walletRequest } = params;
 
   const state = await getState();
   const { tari_wallet_daemon_url } = state;
@@ -127,7 +157,8 @@ async function sendWalletRequest(request: JsonRpcRequest<Json[] | Record<string,
   }
 
   if (await requestUserConfirmation(walletRequest)) {
-    const response = walletClient.sendWalletRequest(tari_wallet_daemon_url, token, walletRequest);
+    const response = await walletClient.sendWalletRequest(tari_wallet_daemon_url, token, walletRequest);
+    await showTransactionNotification(walletRequest, response);
     return response;
   }
 }

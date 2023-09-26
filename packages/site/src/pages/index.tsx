@@ -86,14 +86,16 @@ const Index = () => {
 
   const refreshAccountData = async () => {
     const accountData = await getAccount();
-    setAccountAddress(accountData.account.address.Component);
-    setAccountName(accountData.account.name);
-    setAccountPublicKey(accountData.public_key);
+    if (accountData) {
+      setAccountAddress(accountData.account.address.Component);
+      setAccountName(accountData.account.name);
+      setAccountPublicKey(accountData.public_key);
 
-    const balanceData = await getBalances();
-    let balances = balanceData.balances.map(b => { return({ name: b.token_symbol ||  "Tari", address: b.resource_address, balance: b.balance});});
-    console.log({balances});
-    setAccountBalances(balances);
+      const balanceData = await getBalances();
+      let balances = balanceData.balances.map(b => { return({ name: b.token_symbol ||  "Tari", address: b.resource_address, balance: b.balance});});
+      console.log({balances});
+      setAccountBalances(balances);
+    } 
   }
 
   useEffect(() => {
