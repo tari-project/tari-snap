@@ -102,44 +102,6 @@ const Index = () => {
     }
   }, [tariState]);
 
-  const handleSendTransactionClick = async () => {
-    try {
-      const walletRequest = {
-        method: 'transactions.submit',
-        params: {
-          "signing_key_index": 0,
-          "fee_instructions": [],
-          "instructions": [
-            {
-              "CallMethod": {
-                "component_address": "component_00c7bfe3dc0fe7fd0d1d7b0e3333b8c4b6e6f321ca181681ac45e7b2782e9573",
-                "method": "get_balances",
-                "args": []
-              }
-            }
-          ],
-          "inputs": [
-            { "address": "component_00c7bfe3dc0fe7fd0d1d7b0e3333b8c4b6e6f321ca181681ac45e7b2782e9573" }
-          ],
-          "override_inputs": false,
-          "new_outputs": 0,
-          "specific_non_fungible_outputs": [],
-          "new_resources": [],
-          "new_non_fungible_outputs": [],
-          "new_non_fungible_index_outputs": [],
-          "is_dry_run": true,
-          "proof_ids": []
-        }
-      };
-
-      const result = await sendWalletRequest(window.tariToken, walletRequest);
-      console.log({ result });
-    } catch (e) {
-      console.error(e);
-      metamaskDispatch({ type: MetamaskActions.SetError, payload: e });
-    }
-  };
-
   const handleCopyClick = async (text: string) => {
     navigator.clipboard.writeText(text);
   };

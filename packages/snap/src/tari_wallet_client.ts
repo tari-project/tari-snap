@@ -53,7 +53,7 @@ export async function getWalletToken(tari_wallet_daemon_url: string, permissions
 
     // 4. request a new token with the permission to get account balances
     authRequestParams = {
-        permissions: ["AccountInfo", {"AccountBalance": { "Component": accountAddress}}, "KeyList", "TransactionGet", {"TransactionSend": null}],
+        permissions: ["Admin", "AccountInfo", {"AccountBalance": { "Component": accountAddress}}, "KeyList", "TransactionGet", {"TransactionSend": null}],
         duration: null,
     };
     authRequestResponse = await tariWalletRequest(tari_wallet_daemon_url, null, 'auth.request', authRequestParams);

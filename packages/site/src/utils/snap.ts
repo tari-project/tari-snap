@@ -69,7 +69,8 @@ export const getTariWalletToken = async () => {
       request: {
         method: 'getWalletToken',
         params: {
-          permissions:['AccountInfo', 'KeyList', 'TransactionGet', {'TransactionSend': null}]
+          // TODO: the "Admin" permission should never be used, find a workaround
+          permissions:['Admin', 'AccountInfo', 'KeyList', 'TransactionGet', {'TransactionSend': null}]
         }
       }
     },
@@ -103,3 +104,19 @@ export const sendWalletRequest = async (token: string, walletRequest: Object) =>
 };
 
 export const isLocalSnap = (snapId: string) => snapId.startsWith('local:');
+
+
+export function resource_address_to_int_array(resource_address: string) {
+  const hex_string = resource_address.replace( 'resource_', '' );  
+  return hex_to_int_array(hex_string);
+}
+
+export function hex_to_int_array(hex_string: string) {
+  // splits the string into segments of two including a remainder => {1,2}
+  const tokens = hex_string.match(/[0-9a-z]{2}/gi);
+  if(!tokens) {
+    return null;
+  }
+  const int_array = tokens.map(t => parseInt(t, 16));
+  return int_array;
+}
