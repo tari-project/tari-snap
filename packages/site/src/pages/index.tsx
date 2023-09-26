@@ -117,7 +117,6 @@ const Index = () => {
   };
 
   const handleSendDialogSend = (token: string, amount: number, recipientAddress: string) => {
-    console.log({ token, amount, recipientAddress });
     setSendDialogOpen(false);
   };
 
@@ -198,6 +197,7 @@ const Index = () => {
         open={sendDialogOpen}
         onSend={handleSendDialogSend}
         onClose={handleSendDialogClose}
+        accountBalances={accountBalances}
       />
       <ReceiveDialog
         address={accountPublicKey}

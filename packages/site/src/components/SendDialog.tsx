@@ -1,6 +1,5 @@
 import Box from "@mui/material/Box";
 import Dialog from "@mui/material/Dialog";
-import DialogTitle from "@mui/material/DialogTitle";
 import Divider from "@mui/material/Divider";
 import ListItemText from "@mui/material/ListItemText";
 import MenuItem from "@mui/material/MenuItem";
@@ -13,37 +12,54 @@ import CloseIcon from '@mui/icons-material/Close';
 import IconButton from "@mui/material/IconButton";
 import Button from "@mui/material/Button";
 import { MetaMaskContext, MetamaskActions, TariContext } from "../hooks";
-import { hex_to_int_array, resource_address_to_int_array, sendWalletRequest } from "../utils/snap";
-
-const tokens = [
-    { value: "resource_0101010101010101010101010101010101010101010101010101010101010101", text: "Tari" },
-    { value: "a_coin", text: "A coin" },
-    { value: "b_coin", text: "B coin" },
-];
+import { resource_address_to_int_array, sendWalletRequest } from "../utils/snap";
 
 export interface SendDialogProps {
     open: boolean;
     onSend: (token: string, amount: number, recipient: string) => void;
     onClose: () => void;
+    accountBalances: Object[];
 }
 
 export function SendDialog(props: SendDialogProps) {
     const [metamaskState, metamaskDispatch] = useContext(MetaMaskContext);
     const [tariState, tariDispatch] = useContext(TariContext);
 
-    const { onSend, onClose, open } = props;
-    const [token, setToken] = React.useState(tokens[0].value);
+    const { onSend, onClose, accountBalances, open } = props;
+    const [token, setToken] = React.useState(null);
+    const [tokenBalance, setTokenBalance] = React.useState(0);
     const [amount, setAmount] = React.useState(0);
     const [recipient, setRecipient] = React.useState('');
 
+    // clear dialog form each time it closes
+    useEffect(() => { 
+        if (!open && shouldRender()) {
+            refreshForm();
+        }
+    }, [open]);
+
+    // reset the form if the user account balances change
     useEffect(() => {
-        // clear dialog data each time it closes
-        if (!open) {
-            setToken(tokens[0].value);
+        if (!token) {
+            refreshForm();
+        }
+    }, [props.accountBalances]);
+
+    // recalculate the max balance when a token is selected
+    useEffect(() => {
+        if (token) {
+            const value = getTokenBalance(token);
+            setTokenBalance(value);
+        }
+    }, [token]);
+
+    const refreshForm = () => {
+        if (accountBalances && accountBalances.length > 0) {
+            setToken(accountBalances[0].address);
             setAmount(0);
             setRecipient('');
         }
-    }, [open]);
+    };
 
     const handleTokenChange = async (event) => {
         setToken(event.target.value);
@@ -56,6 +72,21 @@ export function SendDialog(props: SendDialogProps) {
     const handleRecipientChange = async (event) => {
         setRecipient(event.target.value);
     };
+
+    const handleMaxBalanceClick = async () => {
+        setAmount(tokenBalance);
+    };
+
+    const getTokenBalance = (tokenAddress: string) => {
+        if(!tokenAddress || !props.accountBalances) {
+            return 0;
+        }
+
+        const element = props.accountBalances.find((b) => b.address === tokenAddress);
+        if (element) {
+            return element.balance;
+        } else return 0;
+    }
 
     const handleSendClick = async () => {
         try {
@@ -86,6 +117,14 @@ export function SendDialog(props: SendDialogProps) {
         onClose();
     };
 
+    const shouldRender = () => {
+        return token && accountBalances;
+    }
+
+    if (!shouldRender()) {
+        return null;
+    }
+
     return (
         <Dialog fullWidth={true} onClose={handleClose} open={open}>
             <Box sx={{ padding: 4, borderRadius: 4 }}>
@@ -101,8 +140,8 @@ export function SendDialog(props: SendDialogProps) {
                         <Typography style={{ fontSize: 12 }}>
                             Token
                         </Typography>
-                        <Typography style={{ fontSize: 12 }}>
-                            Max: 0
+                        <Typography style={{ fontSize: 12, cursor: 'pointer' }} onClick={handleMaxBalanceClick}>
+                            Max: {tokenBalance}
                         </Typography>
                     </Stack>
                     <Stack direction="row" spacing={2} sx={{ marginTop: 1 }}>
@@ -112,13 +151,14 @@ export function SendDialog(props: SendDialogProps) {
                             onChange={handleTokenChange}
                             sx={{ width: '30%', borderRadius: 4 }}
                         >
-                            {tokens.map((t) => (
-                                <MenuItem value={t.value}>
-                                    <ListItemText primary={t.text} />
+                            {props.accountBalances.map((b) => (
+                                <MenuItem value={b.address}>
+                                    <ListItemText primary={b.name} />
                                 </MenuItem>
                             ))}
                         </Select>
                         <TextField sx={{ width: '70%' }} id="amount" placeholder="0"
+                            value={amount}
                             onChange={handleAmountChange}
                             InputProps={{
                                 sx: { borderRadius: 4 },
