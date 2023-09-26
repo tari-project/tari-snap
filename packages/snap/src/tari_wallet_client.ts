@@ -8,7 +8,7 @@ export async function tariWalletRequest(tari_wallet_daemon_url: string, token: s
         accept: 'application/json',
     };
     if (token) {
-        headers = { ...headers, Authorization: `Bearer ${token}`};
+        headers = { ...headers, Authorization: `Bearer ${token}` };
     }
 
     const body = {
@@ -21,7 +21,7 @@ export async function tariWalletRequest(tari_wallet_daemon_url: string, token: s
     const requestParams: RequestInit = {
         headers,
         method: 'POST',
-        body: JSON.stringify(body),   
+        body: JSON.stringify(body),
     };
 
     const response = await fetch(baseUrl, requestParams);
@@ -53,7 +53,7 @@ export async function getWalletToken(tari_wallet_daemon_url: string, permissions
 
     // 4. request a new token with the permission to get account balances
     authRequestParams = {
-        permissions: ["Admin", "AccountInfo", {"AccountBalance": { "Component": accountAddress}}, "KeyList", "TransactionGet", {"TransactionSend": null}],
+        permissions: ["Admin", "AccountInfo", { "AccountBalance": { "Component": accountAddress } }, "KeyList", "TransactionGet", { "TransactionSend": null }],
         duration: null,
     };
     authRequestResponse = await tariWalletRequest(tari_wallet_daemon_url, null, 'auth.request', authRequestParams);
@@ -74,4 +74,15 @@ export async function sendWalletRequest(tari_wallet_daemon_url: string, token: s
     const { method, params } = walletRequest;
     const response = await tariWalletRequest(tari_wallet_daemon_url, token, method, params);
     return response;
+}
+
+export function int_array_to_resource_address(int_array: number[]) {
+    return "resource_" + int_array_to_hex(int_array);
+}
+
+export function int_array_to_hex(int_array: number[]) {
+    return int_array.map(i => {
+        var h = (i).toString(16);
+        return h.length % 2 ? '0' + h : h;
+    }).join('');
 }

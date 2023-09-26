@@ -1,8 +1,9 @@
 import { Json, JsonRpcRequest, OnRpcRequestHandler } from '@metamask/snaps-types';
-import { panel, text } from '@metamask/snaps-ui';
+import { heading, panel, text } from '@metamask/snaps-ui';
 import { getState, setState } from './state';
-import { GetWalletPublicKeyParams, GetWalletTokenParams, SendWalletRequestParams, SetWalletParams } from './types';
+import { GetWalletPublicKeyParams, GetWalletTokenParams, SendWalletRequestParams, SetWalletParams, WalletRequest } from './types';
 import * as walletClient from './tari_wallet_client';
+import { int_array_to_resource_address } from './tari_wallet_client';
 
 async function setWallet(request: JsonRpcRequest<Json[] | Record<string, Json>>) {
   const params = request.params as SetWalletParams;
@@ -61,6 +62,51 @@ async function getWalletToken(request: JsonRpcRequest<Json[] | Record<string, Js
   return;
 }
 
+async function requestUserConfirmation(req: WalletRequest) {
+  // these methods are safe to be called without user confirmation
+  const methodWhitelist = ['accounts.get_default', 'accounts.get_balances'];
+  if (methodWhitelist.includes(req.method)) {
+    return true;
+  }
+
+  // fund transfer methods always require explicit user confirmation
+  const transferMethods = ['accounts.transfer', 'accounts.transfer'];
+  if (transferMethods.includes(req.method)) {
+    return await snap.request({
+      method: 'snap_dialog',
+      params: {
+        type: 'confirmation',
+        content: panel([
+          heading('Transfer'),
+          text(`This website requests a transfer of funds from your account, do you want to proceed?.`),
+          text('**Destination:** ' + req.params.destination_public_key),
+          text('**Resource:** ' + int_array_to_resource_address(req.params.resource_address)),
+          text('**Amount:** ' + req.params.amount),
+          text('**Fee:** ' + req.params.fee),
+        ])
+      },
+    });
+  }
+
+  // template/component calls
+  if (req.method === 'transactions.send') {
+    return await snap.request({
+      method: 'snap_dialog',
+      params: {
+        type: 'confirmation',
+        content: panel([
+          heading('Transaction'),
+          text(`This website wants to send a transaction, do you want to proceed?.`),
+          // TODO: show transaction details: instructions, fee, etc.
+        ])
+      },
+    });
+  }
+
+  // by default we reject any other wallet method
+  return false;
+}
+
 async function sendWalletRequest(request: JsonRpcRequest<Json[] | Record<string, Json>>) {
   const params = request.params as unknown as SendWalletRequestParams;
   const { token, walletRequest} = params;
@@ -80,8 +126,10 @@ async function sendWalletRequest(request: JsonRpcRequest<Json[] | Record<string,
     return;
   }
 
-  const response = walletClient.sendWalletRequest(tari_wallet_daemon_url, token, walletRequest);
-  return response;
+  if (await requestUserConfirmation(walletRequest)) {
+    const response = walletClient.sendWalletRequest(tari_wallet_daemon_url, token, walletRequest);
+    return response;
+  }
 }
 
 /**
