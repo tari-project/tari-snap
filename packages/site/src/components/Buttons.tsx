@@ -81,7 +81,7 @@ export const ConnectButton = (props: ComponentProps<typeof Button>) => {
   return (
     <Button {...props}>
       <FlaskFox />
-      <ButtonText>Connect</ButtonText>
+      <ButtonText>Connect Snap</ButtonText>
     </Button>
   );
 };
@@ -90,7 +90,7 @@ export const ReconnectButton = (props: ComponentProps<typeof Button>) => {
   return (
     <Button {...props}>
       <FlaskFox />
-      <ButtonText>Reconnect</ButtonText>
+      <ButtonText>Reconnect Snap</ButtonText>
     </Button>
   );
 };
@@ -104,7 +104,6 @@ export const HeaderButtons = ({
   metamaskDispatch,
   onConnectClick,
   onTariWalletClick,
-  onTariTokenClick,
 }: {
   state: MetamaskState;
   onConnectClick(): unknown;
@@ -122,10 +121,7 @@ export const HeaderButtons = ({
       <Stack direction="row" spacing={2}>
         <ReconnectButton onClick={onConnectClick} />
         <Button onClick={onTariWalletClick}>
-          Configure Tari Wallet Daemon
-        </Button>
-        <Button onClick={onTariTokenClick}>
-          Connect Tari Wallet Daemon
+          Connect Tari Wallet
         </Button>
       </Stack>
     );

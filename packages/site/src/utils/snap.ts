@@ -54,11 +54,13 @@ export const getSnap = async (version?: string): Promise<Snap | undefined> => {
 
 export const setTariWallet = async () => {
   let tari_wallet_daemon_url = "http://127.0.0.1:9000";
-  await window.ethereum.request({
+
+  // The "setWallet" snap method returns a wallet token to avoid repetitive user interactions
+  let token = await window.ethereum.request({
     method: 'wallet_invokeSnap',
     params: { snapId: defaultSnapOrigin, request: { method: 'setWallet', params: { tari_wallet_daemon_url } } },
   });
-  return tari_wallet_daemon_url;
+  return token;
 };
 
 export const getTariWalletToken = async () => {

@@ -63,10 +63,10 @@ export const Header = ({
 
   const handleSetTariWalletClick = async () => {
     try {
-      let wallet_daemon_url = await setTariWallet();
+      let token = await setTariWallet();
       tariDispatch({
-        type: TariActions.SetWalletDaemonUrl,
-        payload: wallet_daemon_url,
+        type: TariActions.SetToken,
+        payload: token,
       });
     } catch (e) {
       console.error(e);

@@ -1,11 +1,12 @@
 import { Json, JsonRpcRequest, OnRpcRequestHandler } from '@metamask/snaps-types';
 import { heading, panel, text } from '@metamask/snaps-ui';
 import { getState, setState } from './state';
-import { GetWalletPublicKeyParams, GetWalletTokenParams, SendWalletRequestParams, SetWalletParams, WalletRequest } from './types';
+import { SendWalletRequestParams, SetWalletParams, WalletRequest } from './types';
 import * as walletClient from './tari_wallet_client';
 import { int_array_to_resource_address } from './tari_wallet_client';
 
 async function setWallet(request: JsonRpcRequest<Json[] | Record<string, Json>>) {
+  // ask the user to set up the wallet url in the snap as the one requested by the website
   const params = request.params as SetWalletParams;
   const { tari_wallet_daemon_url } = params;
   const result = await snap.request({
@@ -18,17 +19,22 @@ async function setWallet(request: JsonRpcRequest<Json[] | Record<string, Json>>)
       ]),
     },
   });
-  if (result === true) {
-    const state = await getState();
-    setState({ ...state, tari_wallet_daemon_url });
+
+  // stop inmmediatly if the user does not approve
+  if (!result) {
+    return;
   }
-  return;
+
+  // setup the wallet url in the snap
+  const state = await getState();
+  setState({ ...state, tari_wallet_daemon_url });
+
+  // we also get a wallet token to avoid repetitive user actions afterwards
+  const token = await walletClient.getWalletToken(tari_wallet_daemon_url);
+  return token;
 }
 
-async function getWalletToken(request: JsonRpcRequest<Json[] | Record<string, Json>>) {
-  const params = request.params as GetWalletTokenParams;
-  const { permissions } = params;
-
+async function getWalletToken(_request: JsonRpcRequest<Json[] | Record<string, Json>>) {
   const state = await getState();
   const { tari_wallet_daemon_url } = state;
   if (!tari_wallet_daemon_url) {
@@ -56,7 +62,7 @@ async function getWalletToken(request: JsonRpcRequest<Json[] | Record<string, Js
     },
   });
   if (result === true) {
-    const token = await walletClient.getWalletToken(tari_wallet_daemon_url, permissions);
+    const token = await walletClient.getWalletToken(tari_wallet_daemon_url);
     return token;
   }
   return;

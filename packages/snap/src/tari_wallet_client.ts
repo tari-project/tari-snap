@@ -30,7 +30,7 @@ export async function tariWalletRequest(tari_wallet_daemon_url: string, token: s
     return data.result;
 }
 
-export async function getWalletToken(tari_wallet_daemon_url: string, permissions: Array<TariPermission>) {
+export async function getWalletToken(tari_wallet_daemon_url: string) {
     // 1. auth.request
     let authRequestParams = {
         permissions: ["AccountInfo"],

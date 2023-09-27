@@ -3,11 +3,8 @@ import {
   Dispatch,
   ReactNode,
   Reducer,
-  useEffect,
   useReducer,
 } from 'react';
-import { Snap } from '../types';
-import { detectSnaps, getSnap, isFlask } from '../utils';
 
 export type TariState = {
   wallet_daemon_url?: string,
@@ -29,18 +26,11 @@ export const TariContext = createContext<
 ]);
 
 export enum TariActions {
-  SetWalletDaemonUrl = 'SetWalletDaemonUrl',
   SetToken = 'SetToken',
 }
 
 const reducer: Reducer<TariState, TariDispatch> = (state, action) => {
   switch (action.type) {
-    case TariActions.SetWalletDaemonUrl:
-      return {
-        ...state,
-        wallet_daemon_url: action.payload,
-      };
-
     case TariActions.SetToken:
       return {
         ...state,
