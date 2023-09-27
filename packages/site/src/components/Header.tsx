@@ -92,7 +92,7 @@ export const Header = ({
     <HeaderWrapper>
       <LogoWrapper>
         <SnapLogo color={theme.colors.icon.default} size={36} />
-        <Title>Tari Web Wallet</Title>
+        <Title>Tari Wallet</Title>
       </LogoWrapper>
       <RightContainer>
         <HeaderButtons
