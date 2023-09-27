@@ -97,11 +97,13 @@ const Index = () => {
 
   const refreshAccountBalances = async () => {
     const balanceData = await getBalances();
-    let balances = balanceData.balances.map(b => { return ({ name: b.token_symbol || "Tari", address: b.resource_address, balance: b.balance }); });
-    setAccountBalances(balances);
+    if (balanceData) {
+      let balances = balanceData.balances.map(b => { return ({ name: b.token_symbol || "Tari", address: b.resource_address, balance: b.balance }); });
+      setAccountBalances(balances);
 
-    // we keep polling for balances to keep them updated
-    setTimeout(async () => { await refreshAccountBalances() }, 2000);
+      // we keep polling for balances to keep them updated
+      setTimeout(async () => { await refreshAccountBalances() }, 2000);
+    }
   }
 
   useEffect(() => {
