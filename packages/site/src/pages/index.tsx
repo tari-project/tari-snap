@@ -45,7 +45,7 @@ const Index = () => {
 
   const [sendDialogOpen, setSendDialogOpen] = React.useState(false);
   const [receiveDialogOpen, setReceiveDialogOpen] = React.useState(false);
-  
+
 
   const isMetaMaskReady = isLocalSnap(defaultSnapOrigin)
     ? metamaskState.isFlask
@@ -91,16 +91,22 @@ const Index = () => {
       setAccountName(accountData.account.name);
       setAccountPublicKey(accountData.public_key);
 
-      const balanceData = await getBalances();
-      let balances = balanceData.balances.map(b => { return({ name: b.token_symbol ||  "Tari", address: b.resource_address, balance: b.balance});});
-      console.log({balances});
-      setAccountBalances(balances);
-    } 
+      await refreshAccountBalances();
+    }
+  }
+
+  const refreshAccountBalances = async () => {
+    const balanceData = await getBalances();
+    let balances = balanceData.balances.map(b => { return ({ name: b.token_symbol || "Tari", address: b.resource_address, balance: b.balance }); });
+    setAccountBalances(balances);
+
+    // we keep polling for balances to keep them updated
+    setTimeout(async () => { await refreshAccountBalances() }, 2000);
   }
 
   useEffect(() => {
     if (tariState.token) {
-      refreshAccountData();  
+      refreshAccountData();
     }
   }, [tariState]);
 
@@ -176,19 +182,19 @@ const Index = () => {
           </TableHead>
           <TableBody>
             {accountBalances ?
-            accountBalances.map((token) => (
-              <TableRow
-                key={token.name}
-                sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-              >
-                <TableCell component="th" scope="row" sx={{ fontSize: 14 }}>
-                  {token.name}
-                </TableCell>
-                <TableCell sx={{ fontSize: 14 }}>{token.address}</TableCell>
-                <TableCell sx={{ fontSize: 14 }}> {token.balance}</TableCell>
-              </TableRow>
-            ))
-            : ''
+              accountBalances.map((token) => (
+                <TableRow
+                  key={token.name}
+                  sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                >
+                  <TableCell component="th" scope="row" sx={{ fontSize: 14 }}>
+                    {token.name}
+                  </TableCell>
+                  <TableCell sx={{ fontSize: 14 }}>{token.address}</TableCell>
+                  <TableCell sx={{ fontSize: 14 }}> {token.balance}</TableCell>
+                </TableRow>
+              ))
+              : ''
             }
           </TableBody>
         </Table>
