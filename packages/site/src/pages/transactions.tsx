@@ -1,20 +1,21 @@
 import { useContext, useEffect } from 'react';
 import { MetamaskActions, MetaMaskContext, TariContext } from '../hooks';
+
 import {
-  connectSnap,
-  getSnap,
-  getTariWalletToken,
-  isLocalSnap,
-  sendWalletRequest,
-  setTariWallet,
-  shouldDisplayReconnectButton,
+    connectSnap,
+    getSnap,
+    getTariWalletToken,
+    isLocalSnap,
+    sendWalletRequest,
+    setTariWallet,
+    shouldDisplayReconnectButton,
 } from '../utils';
 import {
-  ConnectButton,
-  InstallFlaskButton,
-  ReconnectButton,
-  SendHelloButton,
-  Card,
+    ConnectButton,
+    InstallFlaskButton,
+    ReconnectButton,
+    SendHelloButton,
+    Card,
 } from '../components';
 import { defaultSnapOrigin } from '../config';
 import Container from '@mui/material/Container';
@@ -30,17 +31,17 @@ import TableRow from '@mui/material/TableRow';
 import TableCell from '@mui/material/TableCell';
 import TableHead from '@mui/material/TableHead';
 import TableBody from '@mui/material/TableBody';
-import { SendDialog } from '../components/SendDialog';
 import React from 'react';
+import { SendDialog } from '../components/SendDialog';
 import { ReceiveDialog } from '../components/ReceiveDialog';
-import { Route, Routes } from 'react-router-dom';
 
-const Index = () => {
-  return (
-    <div>
-      index
-    </div>
-  );
-};
+function Transactions() {
+    const [metamaskState, metamaskDispatch] = useContext(MetaMaskContext);
+    const [tariState, tariDispatch] = useContext(TariContext);
 
-export default Index;
+    return (
+        <div>Transactions will go here</div>
+    );
+}
+
+export default Transactions;

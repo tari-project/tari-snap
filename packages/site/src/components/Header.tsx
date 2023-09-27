@@ -5,6 +5,9 @@ import { connectSnap, getThemePreference, getSnap, getTariWalletToken, setTariWa
 import { HeaderButtons, SendHelloButton } from './Buttons';
 import { SnapLogo } from './SnapLogo';
 import { Toggle } from './Toggle';
+import IconButton from '@mui/material/IconButton';
+import Button from '@mui/material/Button';
+import MenuItem from '@mui/material/MenuItem';
 
 const HeaderWrapper = styled.header`
   display: flex;
@@ -26,6 +29,12 @@ const Title = styled.p`
 `;
 
 const LogoWrapper = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+`;
+
+const SectionContainer = styled.div`
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -94,6 +103,10 @@ export const Header = ({
         <SnapLogo color={theme.colors.icon.default} size={36} />
         <Title>Tari Wallet</Title>
       </LogoWrapper>
+      <SectionContainer>
+        <MenuItem sx={{ fontSize: 18}}>Balances</MenuItem>
+        <MenuItem sx={{ fontSize: 18}}>Transactions</MenuItem>
+      </SectionContainer>
       <RightContainer>
         <HeaderButtons
           metamaskState={metamaskState} metamaskDispatch={(v) => metamaskDispatch(v)} onConnectClick={handleMetamaskConnectClick}

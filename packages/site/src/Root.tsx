@@ -3,6 +3,7 @@ import { ThemeProvider } from 'styled-components';
 import { getThemePreference, setLocalStorage } from './utils';
 import { dark, light } from './config/theme';
 import { MetaMaskProvider, TariProvider } from './hooks';
+import { BrowserRouter as Router } from "react-router-dom";
 
 export type RootProps = {
   children: ReactNode;
@@ -25,7 +26,11 @@ export const Root: FunctionComponent<RootProps> = ({ children }) => {
   return (
     <ToggleThemeContext.Provider value={toggleTheme}>
       <ThemeProvider theme={darkTheme ? dark : light}>
-        <MetaMaskProvider><TariProvider>{children}</TariProvider></MetaMaskProvider>
+        <MetaMaskProvider>
+          <TariProvider>
+              {children}
+          </TariProvider>
+        </MetaMaskProvider>
       </ThemeProvider>
     </ToggleThemeContext.Provider>
   );
