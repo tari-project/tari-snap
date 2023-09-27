@@ -13,6 +13,8 @@ import IconButton from "@mui/material/IconButton";
 import Button from "@mui/material/Button";
 import { MetaMaskContext, MetamaskActions, TariContext } from "../hooks";
 import { resource_address_to_int_array, sendWalletRequest } from "../utils/snap";
+import { ThemeFullWidthButton } from "./Buttons";
+import OutlinedInput from "@mui/material/OutlinedInput";
 
 export interface SendDialogProps {
     open: boolean;
@@ -127,7 +129,7 @@ export function SendDialog(props: SendDialogProps) {
 
     return (
         <Dialog fullWidth={true} onClose={handleClose} open={open}>
-            <Box sx={{ padding: 4, borderRadius: 4 }}>
+            <Box sx={{ padding: 5, borderRadius: 4 }}>
                 <Stack direction="row" justifyContent="space-between" spacing={2}>
                     <Typography style={{ fontSize: 24 }}>Send</Typography>
                     <IconButton aria-label="copy" onClick={handleClose}>
@@ -135,12 +137,12 @@ export function SendDialog(props: SendDialogProps) {
                     </IconButton>
                 </Stack>
                 <Divider sx={{ mt: 3, mb: 3 }} variant="middle" />
-                <Box>
+                <Box sx={{ padding: 1}}>
                     <Stack direction="row" justifyContent="space-between" spacing={2}>
-                        <Typography style={{ fontSize: 12 }}>
+                        <Typography style={{ fontSize: 14 }}>
                             Token
                         </Typography>
-                        <Typography style={{ fontSize: 12, cursor: 'pointer' }} onClick={handleMaxBalanceClick}>
+                        <Typography style={{ fontSize: 14, cursor: 'pointer' }} onClick={handleMaxBalanceClick}>
                             Max: {tokenBalance}
                         </Typography>
                     </Stack>
@@ -149,7 +151,7 @@ export function SendDialog(props: SendDialogProps) {
                             id="token"
                             value={token}
                             onChange={handleTokenChange}
-                            sx={{ width: '30%', borderRadius: 4 }}
+                            sx={{ width: '30%', borderRadius: 4, height: 'fit-content' }}
                         >
                             {props.accountBalances.map((b) => (
                                 <MenuItem value={b.address}>
@@ -168,7 +170,7 @@ export function SendDialog(props: SendDialogProps) {
                             }}>
                         </TextField>
                     </Stack>
-                    <Typography sx={{ mt: 3 }} style={{ fontSize: 12 }}>
+                    <Typography sx={{ mt: 4 }} style={{ fontSize: 14 }}>
                         Recipient
                     </Typography>
                     <TextField sx={{ mt: 1, width: '100%' }} id="recipient" placeholder="0"
@@ -178,11 +180,9 @@ export function SendDialog(props: SendDialogProps) {
                         }}>
                     </TextField>
                 </Box>
-                <Button variant="contained" sx={{ width: '100%', mt: 3, padding: 2, borderRadius: 4, textTransform: 'none', justifySelf: 'right' }} onClick={async () => { await handleSendClick(); }}>
-                    <Typography style={{ fontSize: 15 }} >
-                        Send
-                    </Typography>
-                </Button>
+                <Stack direction="row" justifyContent="center" sx={{ mt: 4, width: '100%' }}>
+                    <ThemeFullWidthButton text="Send" onClick={async () => { await handleSendClick(); }}/>
+                </Stack>
             </Box>
         </Dialog >
     );

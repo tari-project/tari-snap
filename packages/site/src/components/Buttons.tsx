@@ -44,6 +44,15 @@ const Button = styled.button`
   }
 `;
 
+const FullWidthButton = styled.button`
+  display: flex;
+  align-self: flex-start;
+  align-items: center;
+  justify-content: center;
+  margin-top: auto;
+  width: 100%;
+`;
+
 const ButtonText = styled.span`
   margin-left: 1rem;
 `;
@@ -95,8 +104,12 @@ export const ReconnectButton = (props: ComponentProps<typeof Button>) => {
   );
 };
 
-export const SendHelloButton = (props: ComponentProps<typeof Button>) => {
-  return <Button {...props}>Send message</Button>;
+export const ThemeButton = (props: ComponentProps<typeof Button>) => {
+  return (<Button {...props}>{props.text}</Button>);
+};
+
+export const ThemeFullWidthButton = (props: ComponentProps<typeof Button>) => {
+  return (<FullWidthButton {...props}>{props.text}</FullWidthButton>);
 };
 
 export const HeaderButtons = ({

@@ -13,6 +13,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import IconButton from "@mui/material/IconButton";
 import Button from "@mui/material/Button";
 import { QRCodeSVG } from 'qrcode.react';
+import { ThemeFullWidthButton } from "./Buttons";
 
 export interface SendDialogProps {
     address?: string,
@@ -26,6 +27,18 @@ export function ReceiveDialog(props: SendDialogProps) {
     const handleClose = () => {
         onClose();
     };
+
+    const truncateText = (text: string, length: number) => {
+        if (!length || !text || text.length <= length) {
+            return text;
+        }
+        if (text.length <= length) {
+            return text;
+        }
+        const leftChars = Math.ceil(length/2);
+        const rightChars = Math.floor(length/2);
+        return text.substring(0, leftChars) + '...' + text.substring(text.length - rightChars);
+    }
 
     const handleCopyClick = async () => {
         if(address) {
@@ -47,16 +60,14 @@ export function ReceiveDialog(props: SendDialogProps) {
                     <QRCodeSVG value={address} />
                 </Stack>
                 <Stack direction="row" justifyContent="center">
-                    <Typography sx={{ mt: 4, fontSize: 12, }}>Your address</Typography>
+                    <Typography sx={{ mt: 4, fontSize: 14, }}>Your address</Typography>
                 </Stack>           
                 <Stack direction="row" justifyContent="center">
-                    <Typography sx={{ mt: 2, fontSize: 24, }}>{address}</Typography>
+                    <Typography sx={{ mt: 2, fontSize: 24, wordWrap: "break-word" }}>{truncateText(address, 20)}</Typography>
                 </Stack>   
-                <Button variant="contained" sx={{ width: '100%', mt: 3, padding: 2, borderRadius: 4, textTransform: 'none', justifySelf: 'right' }} onClick={handleCopyClick}>
-                    <Typography style={{ fontSize: 15 }} >
-                        Copy address
-                    </Typography>
-                </Button>
+                <Stack direction="row" justifyContent="center" sx={{ mt: 3, width: '100%' }}>
+                    <ThemeFullWidthButton text="Copy Address" onClick={handleCopyClick}/>
+                </Stack>
             </Box>
         </Dialog >
     );

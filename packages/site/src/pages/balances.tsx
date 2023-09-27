@@ -14,8 +14,8 @@ import {
     ConnectButton,
     InstallFlaskButton,
     ReconnectButton,
-    SendHelloButton,
     Card,
+    ThemeButton,
 } from '../components';
 import { defaultSnapOrigin } from '../config';
 import Container from '@mui/material/Container';
@@ -150,16 +150,8 @@ function Balances() {
                         </Stack>
                     </Box>
                     <Stack direction="row" spacing={2}>
-                        <Button variant="contained" sx={{ padding: 2, borderRadius: 4, textTransform: 'none', justifySelf: 'right' }} onClick={handleReceiveDialogClickOpen}>
-                            <Typography style={{ fontSize: 15 }} >
-                                Receive
-                            </Typography>
-                        </Button>
-                        <Button variant="contained" sx={{ padding: 2, borderRadius: 4, textTransform: 'none', justifySelf: 'right' }} onClick={handleSendDialogClickOpen}>
-                            <Typography style={{ fontSize: 15 }} >
-                                Send
-                            </Typography>
-                        </Button>
+                        <ThemeButton text="Receive" onClick={handleReceiveDialogClickOpen}/>
+                        <ThemeButton text="Send" onClick={handleSendDialogClickOpen}/>
                     </Stack>
                 </Stack>
 
