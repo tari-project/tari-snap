@@ -70,7 +70,14 @@ async function getWalletToken(_request: JsonRpcRequest<Json[] | Record<string, J
 
 async function requestUserConfirmation(req: WalletRequest) {
   // these methods are safe to be called without user confirmation
-  const methodWhitelist = ['accounts.get_default', 'accounts.get_balances'];
+  const methodWhitelist = [
+    'accounts.get_default',
+    'accounts.get_balances',
+    'transactions.get',
+    'transactions.get_result',
+    'transactions.get_all_by_status',
+    'transactions.wait_result'
+  ];
   if (methodWhitelist.includes(req.method)) {
     return true;
   }

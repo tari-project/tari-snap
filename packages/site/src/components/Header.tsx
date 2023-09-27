@@ -82,19 +82,15 @@ export const Header = ({
       metamaskDispatch({ type: MetamaskActions.SetError, payload: e });
     }
   };
-  
-  const handleConnectWalletClick = async () => {
-    try {
-      const token = await getTariWalletToken();
-      console.log({token});
-      tariDispatch({
-        type: TariActions.SetToken,
-        payload: token,
-      });
-    } catch (e) {
-      console.error(e);
-      metamaskDispatch({ type: MetamaskActions.SetError, payload: e });
-    }
+
+  const goToBalances = () => {
+    // TODO: proper react navigation
+    window.location.href = "./balances";
+  };
+
+  const goToTransactions = () => {
+    // TODO: proper react navigation
+    window.location.href = "./transactions";
   };
 
   return (
@@ -104,14 +100,15 @@ export const Header = ({
         <Title>Tari Wallet</Title>
       </LogoWrapper>
       <SectionContainer>
-        <MenuItem sx={{ fontSize: 18}}>Balances</MenuItem>
-        <MenuItem sx={{ fontSize: 18}}>Transactions</MenuItem>
+        <MenuItem sx={{ fontSize: 18}} onClick={goToBalances}>Balances</MenuItem>
+        <MenuItem sx={{ fontSize: 18}} onClick={goToTransactions}>Transactions</MenuItem>
       </SectionContainer>
       <RightContainer>
         <HeaderButtons
-          metamaskState={metamaskState} metamaskDispatch={(v) => metamaskDispatch(v)} onConnectClick={handleMetamaskConnectClick}
-          onTariWalletClick={handleSetTariWalletClick}
-          onTariTokenClick={handleConnectWalletClick}/>
+          metamaskState={metamaskState}
+          metamaskDispatch={(v) => metamaskDispatch(v)}
+          onConnectClick={handleMetamaskConnectClick}
+          onTariWalletClick={handleSetTariWalletClick}/>
       </RightContainer>
     </HeaderWrapper>
   );
