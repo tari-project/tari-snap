@@ -2,12 +2,13 @@ import { useContext } from 'react';
 import styled, { useTheme } from 'styled-components';
 import { MetamaskActions, MetaMaskContext, TariActions, TariContext } from '../hooks';
 import { connectSnap, getThemePreference, getSnap, getTariWalletToken, setTariWallet } from '../utils';
-import { HeaderButtons, SendHelloButton } from './Buttons';
+import { HeaderButtons } from './Buttons';
 import { SnapLogo } from './SnapLogo';
 import { Toggle } from './Toggle';
 import IconButton from '@mui/material/IconButton';
 import Button from '@mui/material/Button';
 import MenuItem from '@mui/material/MenuItem';
+import { navigate } from "gatsby"
 
 const HeaderWrapper = styled.header`
   display: flex;
@@ -84,13 +85,11 @@ export const Header = ({
   };
 
   const goToBalances = () => {
-    // TODO: proper react navigation
-    window.location.href = "./balances";
+    navigate('/');
   };
 
   const goToTransactions = () => {
-    // TODO: proper react navigation
-    window.location.href = "./transactions";
+    navigate('/transactions');
   };
 
   return (

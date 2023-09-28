@@ -149,7 +149,7 @@ export function SendDialog(props: SendDialogProps) {
                             id="token"
                             value={token}
                             onChange={handleTokenChange}
-                            sx={{ width: '30%', borderRadius: 4, height: 'fit-content' }}
+                            sx={{ width: '30%', borderRadius: 4, height: '47px' }}
                         >
                             {props.accountBalances.map((b) => (
                                 <MenuItem value={b.address}>

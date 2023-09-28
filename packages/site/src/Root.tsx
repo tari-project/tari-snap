@@ -3,7 +3,6 @@ import { ThemeProvider } from 'styled-components';
 import { getThemePreference, setLocalStorage } from './utils';
 import { dark, light } from './config/theme';
 import { MetaMaskProvider, TariProvider } from './hooks';
-import { BrowserRouter as Router } from "react-router-dom";
 
 export type RootProps = {
   children: ReactNode;
