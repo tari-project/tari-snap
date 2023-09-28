@@ -42,7 +42,7 @@ function Balances() {
     const [accountAddress, setAccountAddress] = React.useState(null);
     const [accountName, setAccountName] = React.useState(null);
     const [accountPublicKey, setAccountPublicKey] = React.useState(null);
-    const [accountBalances, setAccountBalances] = React.useState(null);
+    const [accountBalances, setAccountBalances] = React.useState([]);
 
     const [sendDialogOpen, setSendDialogOpen] = React.useState(false);
     const [receiveDialogOpen, setReceiveDialogOpen] = React.useState(false);
@@ -77,6 +77,7 @@ function Balances() {
         } catch (e) {
             console.error(e);
             metamaskDispatch({ type: MetamaskActions.SetError, payload: e });
+            return [];
         }
     };
 
@@ -93,13 +94,11 @@ function Balances() {
 
     const refreshAccountBalances = async () => {
         const balanceData = await getBalances();
-        if (balanceData) {
-            let balances = balanceData.balances.map(b => { return ({ name: b.token_symbol || "Tari", address: b.resource_address, balance: b.balance }); });
-            setAccountBalances(balances);
+        let balances = balanceData.balances.map(b => { return ({ name: b.token_symbol || "Tari", address: b.resource_address, balance: b.balance }); });
+        setAccountBalances(balances);
 
-            // we keep polling for balances to keep them updated
-            setTimeout(async () => { await refreshAccountBalances() }, 2000);
-        }
+        // we keep polling for balances to keep them updated
+        setTimeout(async () => { await refreshAccountBalances() }, 2000);
     }
 
     useEffect(() => {
@@ -171,7 +170,7 @@ function Balances() {
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {accountBalances ?
+                        {
                             accountBalances.map((token) => (
                                 <TableRow
                                     key={token.name}
@@ -184,7 +183,6 @@ function Balances() {
                                     <TableCell sx={{ fontSize: 14 }}> {token.balance}</TableCell>
                                 </TableRow>
                             ))
-                            : ''
                         }
                     </TableBody>
                 </Table>
