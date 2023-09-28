@@ -1,13 +1,13 @@
 {
   "version": "0.1.0",
-  "description": "An example Snap written in TypeScript.",
-  "proposedName": "TypeScript Example",
+  "description": "MetaMask snap for the Tari network",
+  "proposedName": "Tari Snap",
   "repository": {
     "type": "git",
     "url": "https://github.com/MetaMask/template-snap-monorepo.git"
   },
   "source": {
-    "shasum": "wot30s3ki38/+aY/W90A93D0I4z+D+p+mC+2CCo3Rpo=",
+    "shasum": "nKw4EcJ+EuaXF8tL7hhmrNViWnSwKBCQlPjtHBKEKvI=",
     "location": {
       "npm": {
         "filePath": "dist/bundle.js",
