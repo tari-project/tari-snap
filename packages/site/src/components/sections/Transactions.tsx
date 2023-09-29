@@ -1,5 +1,5 @@
 import { useContext, useEffect } from 'react';
-import { MetamaskActions, MetaMaskContext, TariContext } from '../../hooks';
+import { MetamaskActions, MetaMaskContext, TariActions, TariContext } from '../../hooks';
 
 import {
     sendWalletRequest,
@@ -19,39 +19,48 @@ import IconButton from '@mui/material/IconButton';
 
 function Transactions() {
     const [metamaskState, metamaskDispatch] = useContext(MetaMaskContext);
-    const [tariState, tariDispatch] = useContext(TariContext);
-
-    const [transactions, setTransactions] = React.useState([]);
-
-    useEffect(() => {
-        if (tariState && tariState.token) {
-            refreshTransactions();
-        }
-    }, [tariState]);
-
-    const refreshTransactions = async () => {
-        const transactions = await getTransactions();
-        console.log({ transactions });
-    }
+    const [tari, tariDispatch] = useContext(TariContext);
 
     const getTransactions = async () => {
         try {
+            if (!tari || !tari.token) {
+                return [];
+            }
             const walletRequest = {
                 method: 'transactions.get_all_by_status',
                 params: {
                     status: null,
                 }
             };
-            const response = await sendWalletRequest(tariState.token, walletRequest);
+            const response = await sendWalletRequest(tari.token, walletRequest);
 
             if (response && response.transactions) {
-                setTransactions(response.transactions);
+                return response.transactions;
             }
+            return [];
         } catch (e) {
             console.error(e);
             metamaskDispatch({ type: MetamaskActions.SetError, payload: e });
+            return [];
         }
     };
+
+    const refreshTransactions = async () => {
+        const transactions = await getTransactions();
+        if (transactions && transactions.length > 0) {
+            tariDispatch({
+                type: TariActions.SetTransactions,
+                payload: transactions,
+            });
+        }
+
+        // we keep polling for transactions to keep them updated
+        setTimeout(async () => { await refreshTransactions() }, 4000);
+    }
+
+    useEffect(() => {
+        refreshTransactions();
+    }, [tari.account]);
 
     const handleCopyClick = async (text: string) => {
         navigator.clipboard.writeText(text);
@@ -74,7 +83,7 @@ function Transactions() {
                     </TableHead>
                     <TableBody>
                         {
-                            transactions.map((tx) => (
+                            tari.transactions.map((tx) => (
                                 <TableRow
                                     key={tx[0].id}
                                     sx={{ '&:last-child td, &:last-child th': { border: 0 } }}

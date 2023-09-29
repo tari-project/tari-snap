@@ -21,6 +21,7 @@ import { defaultSnapOrigin } from '../config';
 
 import React from 'react';
 import Balances from '../components/sections/Balances';
+import Transactions from '../components/sections/Transactions';
 
 
 function Index() {
@@ -66,7 +67,10 @@ function Index() {
     }, [tari.token]);
     
     return (
-        <Balances></Balances>
+        <>
+            <Balances></Balances>
+            <Transactions></Transactions>
+        </>
     );
 }
 
