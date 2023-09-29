@@ -1,5 +1,5 @@
 import { useContext, useEffect } from 'react';
-import { MetamaskActions, MetaMaskContext, TariContext } from '../hooks';
+import { MetamaskActions, MetaMaskContext, TariActions, TariContext, AccountState } from '../hooks';
 
 import {
     connectSnap,
@@ -37,12 +37,7 @@ import { ReceiveDialog } from '../components/ReceiveDialog';
 
 function Balances() {
     const [metamaskState, metamaskDispatch] = useContext(MetaMaskContext);
-    const [tariState, tariDispatch] = useContext(TariContext);
-
-    const [accountAddress, setAccountAddress] = React.useState(null);
-    const [accountName, setAccountName] = React.useState(null);
-    const [accountPublicKey, setAccountPublicKey] = React.useState(null);
-    const [accountBalances, setAccountBalances] = React.useState([]);
+    const [tari, tariDispatch] = useContext(TariContext);
 
     const [sendDialogOpen, setSendDialogOpen] = React.useState(false);
     const [receiveDialogOpen, setReceiveDialogOpen] = React.useState(false);
@@ -54,26 +49,30 @@ function Balances() {
                 params: {}
             };
 
-            const account = await sendWalletRequest(tariState.token, walletRequest);
+            const account = await sendWalletRequest(tari.token, walletRequest);
             return account
         } catch (e) {
             console.error(e);
             metamaskDispatch({ type: MetamaskActions.SetError, payload: e });
+            return null;
         }
     };
 
     const getBalances = async () => {
         try {
+            if (!tari || !tari.account || !tari.account.address) {
+                return [];
+            }
             const walletRequest = {
                 method: 'accounts.get_balances',
                 params: {
-                    account: accountAddress,
+                    account: tari.account.address,
                     refresh: true,
                 }
             };
 
-            const account = await sendWalletRequest(tariState.token, walletRequest);
-            return account
+            const response = await sendWalletRequest(tari.token, walletRequest);
+            return response.balances;
         } catch (e) {
             console.error(e);
             metamaskDispatch({ type: MetamaskActions.SetError, payload: e });
@@ -84,31 +83,47 @@ function Balances() {
     const refreshAccountData = async () => {
         const accountData = await getAccount();
         if (accountData) {
-            setAccountAddress(accountData.account.address.Component);
-            setAccountName(accountData.account.name);
-            setAccountPublicKey(accountData.public_key);
+            const payload: AccountState = {
+                name: accountData.account.name,
+                address: accountData.account.address.Component,
+                public_key: accountData.public_key,
+            };
 
-            await refreshAccountBalances();
+            tariDispatch({
+                type: TariActions.SetAccount,
+                payload,
+            });
+
+            refreshAccountBalances();
         }
     }
 
     const refreshAccountBalances = async () => {
-        const balanceData = await getBalances();
-        let balances = balanceData.balances.map(b => { return ({ name: b.token_symbol || "Tari", address: b.resource_address, balance: b.balance }); });
-        setAccountBalances(balances);
+        const raw_balances = await getBalances();
+        let balances = raw_balances.map(b => { return ({ name: b.token_symbol || "Tari", address: b.resource_address, balance: b.balance }); });
+        if (balances.length > 0) {
+            tariDispatch({
+                type: TariActions.SetBalances,
+                payload: balances,
+            });
+        }
 
         // we keep polling for balances to keep them updated
-        setTimeout(async () => { await refreshAccountBalances() }, 2000);
+        setTimeout(async () => { await refreshAccountBalances() }, 4000);
     }
 
     useEffect(() => {
-        if (tariState.token) {
+        if (tari.token) {
             refreshAccountData();
         }
-    }, [tariState]);
+    }, [tari.token]);
 
-    const handleCopyClick = async (text: string) => {
-        navigator.clipboard.writeText(text);
+    useEffect(() => {
+        refreshAccountBalances();
+    }, [tari.account]);
+
+    const handleCopyClick = async (text: string | undefined) => {
+        navigator.clipboard.writeText(text || '');
     };
 
     const handleSendDialogClickOpen = () => {
@@ -133,19 +148,19 @@ function Balances() {
 
     return (
         <Container>
-            {accountAddress ?
+            {tari.account?.public_key ?
                 (<Container>
                     <Paper variant="outlined" elevation={0} sx={{ mt: 4, padding: 2, paddingLeft: 4, paddingRight: 4, borderRadius: 4 }}>
                         <Stack direction="row" justifyContent="space-between" spacing={2}>
                             <Box>
                                 <Typography style={{ fontSize: 12 }} >
-                                    {accountName}
+                                    {tari.account?.name}
                                 </Typography>
                                 <Stack direction="row" alignItems="center" justifyContent="center">
                                     <Typography style={{ fontSize: 15 }} >
-                                        {accountPublicKey}
+                                        {tari.account?.public_key}
                                     </Typography>
-                                    <IconButton aria-label="copy" onClick={() => handleCopyClick(accountPublicKey)}>
+                                    <IconButton aria-label="copy" onClick={() => handleCopyClick(tari.account?.public_key)}>
                                         <ContentCopyIcon />
                                     </IconButton>
                                 </Stack>
@@ -173,7 +188,7 @@ function Balances() {
                             </TableHead>
                             <TableBody>
                                 {
-                                    accountBalances.map((token) => (
+                                    tari.balances.map((token) => (
                                         <TableRow
                                             key={token.name}
                                             sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
@@ -193,10 +208,10 @@ function Balances() {
                         open={sendDialogOpen}
                         onSend={handleSendDialogSend}
                         onClose={handleSendDialogClose}
-                        accountBalances={accountBalances}
+                        accountBalances={tari.balances}
                     />
                     <ReceiveDialog
-                        address={accountPublicKey}
+                        address={tari.account?.public_key}
                         open={receiveDialogOpen}
                         onClose={handleReceiveDialogClose}
                     />

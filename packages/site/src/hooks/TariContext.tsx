@@ -7,11 +7,21 @@ import {
 } from 'react';
 
 export type TariState = {
-  wallet_daemon_url?: string,
   token?: string;
+  account?: AccountState;
+  balances: Object[],
+  transactions: Object[],
+};
+
+export type AccountState = {
+  name: string,
+  address: string,
+  public_key: string,
 };
 
 const initialState: TariState = {
+  balances: [],
+  transactions: []
 };
 
 type TariDispatch = { type: TariActions; payload: any };
@@ -27,6 +37,9 @@ export const TariContext = createContext<
 
 export enum TariActions {
   SetToken = 'SetToken',
+  SetAccount = 'SetAccount',
+  SetBalances = 'SetBalances',
+  SetTransactions = 'SetTransactions',
 }
 
 const reducer: Reducer<TariState, TariDispatch> = (state, action) => {
@@ -35,6 +48,22 @@ const reducer: Reducer<TariState, TariDispatch> = (state, action) => {
       return {
         ...state,
         token: action.payload,
+      };
+    case TariActions.SetAccount:
+      console.log({setAccount: action.payload});
+      return {
+        ...state,
+        account: action.payload,
+      };
+    case TariActions.SetBalances:
+      return {
+        ...state,
+        balances: action.payload,
+      };
+    case TariActions.SetTransactions:
+      return {
+        ...state,
+        transactions: action.payload,
       };
     default:
       return state;

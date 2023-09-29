@@ -1,9 +1,9 @@
 import { useContext, useEffect } from 'react';
-import { MetamaskActions, MetaMaskContext, TariContext } from '../hooks';
+import { MetamaskActions, MetaMaskContext, TariContext } from '../../hooks';
 
 import {
     sendWalletRequest,
-} from '../utils';
+} from '../../utils';
 import Container from '@mui/material/Container';
 import Typography from '@mui/material/Typography';
 import Paper from '@mui/material/Paper';
@@ -24,7 +24,7 @@ function Transactions() {
     const [transactions, setTransactions] = React.useState([]);
 
     useEffect(() => {
-        if (tariState.token) {
+        if (tariState && tariState.token) {
             refreshTransactions();
         }
     }, [tariState]);
