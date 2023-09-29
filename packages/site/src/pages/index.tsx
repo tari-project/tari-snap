@@ -110,7 +110,7 @@ function Index() {
     };
 
     return (
-        <Box sx={{ mt: 2 }}>
+        <Box sx={{ mt: 4 }}>
             <Stack direction='row' alignItems="center" justifyContent="center">
                 <MenuItem sx={{ fontSize: 20, fontWeight: tab==0 ? 'bold' : 'default'}} onClick={selectBalances}>Balances</MenuItem>
                 <MenuItem sx={{ fontSize: 20, fontWeight: tab==1 ? 'bold' : 'default'}} onClick={selectTransactions}>Transactions</MenuItem>
