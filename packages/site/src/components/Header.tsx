@@ -35,12 +35,6 @@ const LogoWrapper = styled.div`
   align-items: center;
 `;
 
-const SectionContainer = styled.div`
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-`;
-
 const RightContainer = styled.div`
   display: flex;
   flex-direction: row;
@@ -84,24 +78,12 @@ export const Header = ({
     }
   };
 
-  const goToBalances = () => {
-    navigate('/');
-  };
-
-  const goToTransactions = () => {
-    navigate('/transactions');
-  };
-
   return (
     <HeaderWrapper>
       <LogoWrapper>
         <SnapLogo color={theme.colors.icon.default} size={36} />
         <Title>Tari Wallet</Title>
       </LogoWrapper>
-      <SectionContainer>
-        <MenuItem sx={{ fontSize: 18}} onClick={goToBalances}>Balances</MenuItem>
-        <MenuItem sx={{ fontSize: 18}} onClick={goToTransactions}>Transactions</MenuItem>
-      </SectionContainer>
       <RightContainer>
         <HeaderButtons
           metamaskState={metamaskState}
