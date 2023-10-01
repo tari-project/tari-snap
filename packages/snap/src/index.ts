@@ -4,6 +4,7 @@ import { getState, setState } from './state';
 import { SendWalletRequestParams, SetWalletParams, WalletRequest } from './types';
 import * as walletClient from './tari_wallet_client';
 import { int_array_to_resource_address } from './tari_wallet_client';
+import { getBIP44AddressKeyDeriver } from '@metamask/key-tree';
 
 async function setWallet(request: JsonRpcRequest<Json[] | Record<string, Json>>) {
   // ask the user to set up the wallet url in the snap as the one requested by the website
@@ -176,6 +177,20 @@ async function sendWalletRequest(request: JsonRpcRequest<Json[] | Record<string,
   }
 }
 
+async function signingTest(request: JsonRpcRequest<Json[] | Record<string, Json>>) {
+  const tariNode = await snap.request({
+    method: 'snap_getBip44Entropy',
+    params: {
+      coinType: 12345678,
+    },
+  });
+
+  const deriveTariKey = await getBIP44AddressKeyDeriver(tariNode);
+  const privateKey = await deriveTariKey(0); //Buffer.from(deriveTariKey(0).privateKeyBytes);
+
+  return { privateKey }
+}
+
 /**
  * Handle incoming JSON-RPC requests, sent through `wallet_invokeSnap`.
  *
@@ -194,6 +209,8 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request }) => 
       return getWalletToken(request);
     case 'sendWalletRequest':
       return sendWalletRequest(request);
+    case 'signingTest':
+      return signingTest(request);
     default:
       throw new Error('Method not found.');
   }

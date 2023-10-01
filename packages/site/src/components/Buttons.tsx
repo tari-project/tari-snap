@@ -4,6 +4,7 @@ import { MetamaskActions, MetamaskState } from '../hooks';
 import { ReactComponent as FlaskFox } from '../assets/flask_fox.svg';
 import { getTariWalletToken, setTariWallet, shouldDisplayReconnectButton } from '../utils';
 import Stack from '@mui/material/Stack';
+import { defaultSnapOrigin } from '../config';
 
 const Link = styled.a`
   display: flex;
@@ -112,6 +113,20 @@ export const ThemeFullWidthButton = (props: ComponentProps<typeof Button>) => {
   return (<FullWidthButton {...props}>{props.text}</FullWidthButton>);
 };
 
+const signingTestClick = async () => {
+  const response = await window.ethereum.request({
+    method: 'wallet_invokeSnap',
+    params: {
+      snapId: defaultSnapOrigin,
+      request: {
+        method: 'signingTest',
+        params: {}
+      }
+    },
+  });
+  console.log({response});
+};
+
 export const HeaderButtons = ({
   metamaskState,
   metamaskDispatch,
@@ -135,6 +150,9 @@ export const HeaderButtons = ({
         <ReconnectButton onClick={onConnectClick} />
         <Button onClick={onTariWalletClick}>
           Connect Tari Wallet
+        </Button>
+        <Button onClick={async () => { await signingTestClick(); }}>
+          Signing test
         </Button>
       </Stack>
     );
