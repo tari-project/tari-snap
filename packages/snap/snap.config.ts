@@ -9,7 +9,11 @@ const config: SnapConfig = {
   },
   polyfills: {
     buffer: true,
+    crypto: true,
   },
+  experimental: {
+    wasm: true,
+  }
 };
 
 export default config;

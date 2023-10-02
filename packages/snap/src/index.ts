@@ -5,6 +5,7 @@ import { SendWalletRequestParams, SetWalletParams, WalletRequest } from './types
 import * as walletClient from './tari_wallet_client';
 import { int_array_to_resource_address } from './tari_wallet_client';
 import { getBIP44AddressKeyDeriver } from '@metamask/key-tree';
+import * as tari_wallet_lib from "tari_wallet_lib";
 
 async function setWallet(request: JsonRpcRequest<Json[] | Record<string, Json>>) {
   // ask the user to set up the wallet url in the snap as the one requested by the website
@@ -186,9 +187,12 @@ async function signingTest(request: JsonRpcRequest<Json[] | Record<string, Json>
   });
 
   const deriveTariKey = await getBIP44AddressKeyDeriver(tariNode);
-  const privateKey = await deriveTariKey(0); //Buffer.from(deriveTariKey(0).privateKeyBytes);
+  const privateKey = await deriveTariKey(0);
 
-  return { privateKey }
+  // FIXME: fails with "r.__wbindgen_add_to_stack_pointer is not a function"
+  //const value = tari_wallet_lib.get_value("foo");
+
+  return { privateKey, foo: 'bar' }
 }
 
 /**

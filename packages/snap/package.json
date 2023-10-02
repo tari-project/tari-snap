@@ -29,7 +29,8 @@
   "dependencies": {
     "@metamask/snaps-types": "^0.32.2",
     "@metamask/snaps-ui": "^0.32.2",
-    "buffer": "^6.0.3"
+    "buffer": "^6.0.3",
+    "tari_wallet_lib": "workspace:*"
   },
   "devDependencies": {
     "@jest/globals": "^29.5.0",
@@ -61,9 +62,5 @@
   "packageManager": "yarn@3.2.1",
   "engines": {
     "node": ">=16.0.0"
-  },
-  "publishConfig": {
-    "access": "public",
-    "registry": "https://registry.npmjs.org/"
   }
 }
