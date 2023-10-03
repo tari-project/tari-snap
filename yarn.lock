@@ -8391,19 +8391,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"assemblyscript@npm:^0.27.2":
-  version: 0.27.11
-  resolution: "assemblyscript@npm:0.27.11"
-  dependencies:
-    binaryen: 112.0.0-nightly.20230411
-    long: ^5.2.1
-  bin:
-    asc: bin/asc.js
-    asinit: bin/asinit.js
-  checksum: 5c2aae45c5855cb3a908708c8f91ac16b4361b2a2e4af6fc784c6bc2db8fd15e863c4c31ed2456b1382ccc13c686680a1f3a19fc33957040a97ee4edbf99180b
-  languageName: node
-  linkType: hard
-
 "assert@npm:^1.4.0":
   version: 1.5.1
   resolution: "assert@npm:1.5.1"
@@ -8935,16 +8922,6 @@ __metadata:
     buffers: ~0.1.1
     chainsaw: ~0.1.0
   checksum: b4699fda9e2c2981e74a46b0115cf0d472eda9b68c0e9d229ef494e92f29ce81acf0a834415094cffcc340dfee7c4ef8ce5d048c65c18067a7ed850323f777af
-  languageName: node
-  linkType: hard
-
-"binaryen@npm:112.0.0-nightly.20230411":
-  version: 112.0.0-nightly.20230411
-  resolution: "binaryen@npm:112.0.0-nightly.20230411"
-  bin:
-    wasm-opt: bin/wasm-opt
-    wasm2js: bin/wasm2js
-  checksum: 2ff22208a10a8977254eae227de7ef7234affd3d8504f102d19a2c7e8c2108a1ba074bac1ce5f32cdecbefe12624cef016a491b4e7c4a9de91653a59540cf4e3
   languageName: node
   linkType: hard
 
@@ -17153,13 +17130,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"long@npm:^5.2.1":
-  version: 5.2.3
-  resolution: "long@npm:5.2.3"
-  checksum: 885ede7c3de4facccbd2cacc6168bae3a02c3e836159ea4252c87b6e34d40af819824b2d4edce330bfb5c4d6e8ce3ec5864bdcf9473fa1f53a4f8225860e5897
-  languageName: node
-  linkType: hard
-
 "loose-envify@npm:^1.0.0, loose-envify@npm:^1.1.0, loose-envify@npm:^1.4.0":
   version: 1.4.0
   resolution: "loose-envify@npm:1.4.0"
@@ -21800,7 +21770,6 @@ __metadata:
     "@metamask/snaps-ui": ^0.32.2
     "@typescript-eslint/eslint-plugin": ^5.33.0
     "@typescript-eslint/parser": ^5.33.0
-    assemblyscript: ^0.27.2
     brfs: ^2.0.2
     buffer: ^6.0.3
     eslint: ^8.21.0

@@ -5,6 +5,7 @@ import { SendWalletRequestParams, SetWalletParams, WalletRequest } from './types
 import * as walletClient from './tari_wallet_client';
 import { int_array_to_resource_address } from './tari_wallet_client';
 import { getBIP44AddressKeyDeriver } from '@metamask/key-tree';
+import * as wasm_lib from './wasm_lib';
 
 // Due to a bug of how brfs interacts with babel, we need to use require() syntax instead of import pattern
 // https://github.com/browserify/brfs/issues/39
@@ -15,6 +16,8 @@ const fs = require('fs');
 // - https://developer.mozilla.org/en-US/docs/WebAssembly/Using_the_JavaScript_API
 // - https://github.com/mdn/webassembly-examples/tree/06556204f687c00a5d9d3ab55805204cbb711d0c/js-api-examples
 let wasm: WebAssembly.WebAssemblyInstantiatedSource;
+
+let output: wasm_lib.InitOutput;
 
 /**
  * Load and initialize the WASM module. This modifies the global `wasm`
@@ -30,6 +33,7 @@ const initializeWasm = async () => {
     // eslint-disable-next-line node/no-sync, node/no-path-concat
     const wasmBuffer = fs.readFileSync(`${__dirname}/../../../tari_wallet_lib/pkg/index_bg.wasm`);
     wasm = await WebAssembly.instantiate(wasmBuffer);
+    output = wasm_lib.initSync(wasmBuffer);
   } catch (error) {
     console.error('Failed to initialize WebAssembly module.', error);
     throw error;
@@ -218,9 +222,8 @@ async function signingTest(request: JsonRpcRequest<Json[] | Record<string, Json>
   const deriveTariKey = await getBIP44AddressKeyDeriver(tariNode);
   const privateKey = await deriveTariKey(0);
 
-  if (wasm && wasm.instance.exports['simple_number']) {
-    const f = wasm.instance.exports.simple_number as CallableFunction;
-    return { j: f(10) };
+  if (wasm && output) {
+    return {z: wasm_lib.greeter("cccc")}
   }
 
   return { privateKey, foo: 'bar' }

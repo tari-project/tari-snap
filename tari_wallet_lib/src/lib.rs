@@ -7,5 +7,5 @@ pub fn greeter(name: &str) -> Result<String, JsError> {
 
 #[wasm_bindgen]
 pub fn simple_number(i: i32) -> i32{
-    i + 2
+    i + 3
 }
