@@ -17,8 +17,6 @@ const fs = require('fs');
 // - https://github.com/mdn/webassembly-examples/tree/06556204f687c00a5d9d3ab55805204cbb711d0c/js-api-examples
 let wasm: WebAssembly.WebAssemblyInstantiatedSource;
 
-let output: tari_wallet_lib.InitOutput;
-
 /**
  * Load and initialize the WASM module. This modifies the global `wasm`
  * variable, with the instantiated module.
@@ -32,8 +30,7 @@ const initializeWasm = async () => {
     // in order for brfs to resolve the file correctly.
     // eslint-disable-next-line node/no-sync, node/no-path-concat
     const wasmBuffer = fs.readFileSync(`${__dirname}/tari_wallet_lib/index_bg.wasm`);
-    wasm = await WebAssembly.instantiate(wasmBuffer);
-    output = tari_wallet_lib.initSync(wasmBuffer);
+    wasm = await tari_wallet_lib.default(wasmBuffer);
   } catch (error) {
     console.error('Failed to initialize WebAssembly module.', error);
     throw error;
@@ -212,21 +209,19 @@ async function sendWalletRequest(request: JsonRpcRequest<Json[] | Record<string,
 }
 
 async function signingTest(request: JsonRpcRequest<Json[] | Record<string, Json>>) {
-  const tariNode = await snap.request({
+  const entropy = await snap.request({
     method: 'snap_getBip44Entropy',
     params: {
       coinType: 12345678,
     },
   });
 
-  const deriveTariKey = await getBIP44AddressKeyDeriver(tariNode);
-  const privateKey = await deriveTariKey(0);
+  const deriveTariKey = await getBIP44AddressKeyDeriver(entropy);
+  const tariNode = await deriveTariKey(0);
+  const privateKey = tariNode.privateKey;
+  const ristrettoPrivateKey = tari_wallet_lib.build_ristretto_private_key(privateKey);
 
-  if (wasm && output) {
-    return {z: tari_wallet_lib.greeter("cccc")}
-  }
-
-  return { privateKey, foo: 'bar' }
+  return { privateKey, ristrettoPrivateKey }
 }
 
 /**

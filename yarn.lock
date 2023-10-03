@@ -21783,6 +21783,7 @@ __metadata:
     prettier: ^2.2.1
     prettier-plugin-packagejson: ^2.2.11
     rimraf: ^3.0.2
+    tari_wallet_lib: "workspace:*"
     through2: ^4.0.2
     ts-jest: ^29.1.0
     typescript: ^4.7.4
@@ -22735,7 +22736,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tari_wallet_lib@workspace:tari_wallet_lib/pkg":
+"tari_wallet_lib@workspace:*, tari_wallet_lib@workspace:tari_wallet_lib/pkg":
   version: 0.0.0-use.local
   resolution: "tari_wallet_lib@workspace:tari_wallet_lib/pkg"
   languageName: unknown
