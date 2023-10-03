@@ -10,14 +10,16 @@ edition = "2018"
 crate-type = ["cdylib"]
 
 [profile.release]
-# This makes the compiled code faster and smaller, but it makes compiling slower,
-# so it's only enabled in release mode.
+opt-level = "z"
+strip = true
 lto = true
+codegen-units = 1
 
 [dependencies]
 # The `wasm-bindgen` crate provides the bare minimum functionality needed
 # to interact with JavaScript.
-wasm-bindgen = "0.2.87"
+wasm-bindgen = "0.2"
+console_error_panic_hook = "0.1"
 
 # These crates are used for running unit tests.
 [dev-dependencies]

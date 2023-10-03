@@ -5,7 +5,36 @@ import { SendWalletRequestParams, SetWalletParams, WalletRequest } from './types
 import * as walletClient from './tari_wallet_client';
 import { int_array_to_resource_address } from './tari_wallet_client';
 import { getBIP44AddressKeyDeriver } from '@metamask/key-tree';
-import * as tari_wallet_lib from "tari_wallet_lib";
+
+// Due to a bug of how brfs interacts with babel, we need to use require() syntax instead of import pattern
+// https://github.com/browserify/brfs/issues/39
+// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
+const fs = require('fs');
+
+// Ref:
+// - https://developer.mozilla.org/en-US/docs/WebAssembly/Using_the_JavaScript_API
+// - https://github.com/mdn/webassembly-examples/tree/06556204f687c00a5d9d3ab55805204cbb711d0c/js-api-examples
+let wasm: WebAssembly.WebAssemblyInstantiatedSource;
+
+/**
+ * Load and initialize the WASM module. This modifies the global `wasm`
+ * variable, with the instantiated module.
+ *
+ * @throws If the WASM module failed to initialize.
+ */
+const initializeWasm = async () => {
+  try {
+    // This will be resolved to a buffer with the file contents at build time.
+    // The path to the file must be in a string literal prefixed with __dirname
+    // in order for brfs to resolve the file correctly.
+    // eslint-disable-next-line node/no-sync, node/no-path-concat
+    const wasmBuffer = fs.readFileSync(`${__dirname}/../../../tari_wallet_lib/pkg/index_bg.wasm`);
+    wasm = await WebAssembly.instantiate(wasmBuffer);
+  } catch (error) {
+    console.error('Failed to initialize WebAssembly module.', error);
+    throw error;
+  }
+};
 
 async function setWallet(request: JsonRpcRequest<Json[] | Record<string, Json>>) {
   // ask the user to set up the wallet url in the snap as the one requested by the website
@@ -189,8 +218,10 @@ async function signingTest(request: JsonRpcRequest<Json[] | Record<string, Json>
   const deriveTariKey = await getBIP44AddressKeyDeriver(tariNode);
   const privateKey = await deriveTariKey(0);
 
-  // FIXME: fails with "r.__wbindgen_add_to_stack_pointer is not a function"
-  //const value = tari_wallet_lib.get_value("foo");
+  if (wasm && wasm.instance.exports['simple_number']) {
+    const f = wasm.instance.exports.simple_number as CallableFunction;
+    return { j: f(10) };
+  }
 
   return { privateKey, foo: 'bar' }
 }
@@ -206,6 +237,10 @@ async function signingTest(request: JsonRpcRequest<Json[] | Record<string, Json>
  * @throws If the request method is not valid for this snap.
  */
 export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request }) => {
+  if (!wasm) {
+    await initializeWasm();
+  }
+
   switch (request.method) {
     case 'setWallet':
       return setWallet(request);
