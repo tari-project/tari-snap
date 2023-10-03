@@ -15,15 +15,16 @@
     "snap.manifest.json"
   ],
   "scripts": {
-    "build": "mm-snap build",
+    "build": "yarn build:wasm && mm-snap build --verboseErrors",
+    "build:wasm": "node ./scripts/tari_wallet_lib_import.js",
     "build:clean": "yarn clean && yarn build",
-    "clean": "rimraf dist",
+    "clean": "rimraf dist build",
     "lint": "yarn lint:eslint && yarn lint:misc --check",
     "lint:eslint": "eslint . --cache --ext js,ts",
     "lint:fix": "yarn lint:eslint --fix && yarn lint:misc --write",
     "lint:misc": "prettier '**/*.json' '**/*.md' '!CHANGELOG.md' --ignore-path .gitignore",
     "serve": "mm-snap serve",
-    "start": "mm-snap watch",
+    "start": "yarn build:wasm && mm-snap watch",
     "test": "jest"
   },
   "dependencies": {
