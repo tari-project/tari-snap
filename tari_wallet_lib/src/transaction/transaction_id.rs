@@ -1,0 +1,74 @@
+use std::{
+    fmt,
+    fmt::{Display, Formatter}, convert::TryFrom,
+};
+use tari_crypto::tari_utilities::hex::{from_hex, Hex};
+
+use crate::types::FixedHashSizeError;
+
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+pub struct TransactionId {
+    id: [u8; 32],
+}
+
+impl TransactionId {
+    pub const fn new(id: [u8; 32]) -> Self {
+        Self { id }
+    }
+
+    pub fn as_bytes(&self) -> &[u8] {
+        self.id.as_slice()
+    }
+
+    pub fn into_array(self) -> [u8; 32] {
+        self.id
+    }
+
+    pub fn from_hex(hex: &str) -> Result<Self, FixedHashSizeError> {
+        // TODO: This error isnt correct
+        let bytes = from_hex(hex).map_err(|_| FixedHashSizeError)?;
+        Self::try_from(bytes.as_slice())
+    }
+}
+
+impl AsRef<[u8]> for TransactionId {
+    fn as_ref(&self) -> &[u8] {
+        self.id.as_slice()
+    }
+}
+
+impl Display for TransactionId {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.id.to_hex())
+    }
+}
+
+impl TryFrom<Vec<u8>> for TransactionId {
+    type Error = FixedHashSizeError;
+
+    fn try_from(value: Vec<u8>) -> Result<Self, Self::Error> {
+        Self::try_from(value.as_slice())
+    }
+}
+
+impl TryFrom<&[u8]> for TransactionId {
+    type Error = FixedHashSizeError;
+
+    fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
+        if value.len() != 32 {
+            return Err(FixedHashSizeError);
+        }
+        let mut id = [0u8; 32];
+        id.copy_from_slice(value);
+        Ok(TransactionId::new(id))
+    }
+}
+
+impl From<[u8; 32]> for TransactionId {
+    fn from(id: [u8; 32]) -> Self {
+        Self::new(id)
+    }
+}
+
+
+

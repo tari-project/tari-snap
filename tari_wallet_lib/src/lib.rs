@@ -1,6 +1,17 @@
+pub mod types;
+pub mod transaction;
+pub mod hashing;
+pub mod serde_with;
+pub mod argument_parser;
+pub mod template;
+pub mod substate;
+pub mod fee_claim;
+pub mod shard_id;
+
 use wasm_bindgen::prelude::*;
 use tari_crypto::tari_utilities::hex::Hex;
 use tari_crypto::ristretto::RistrettoSecretKey;
+
 
 #[wasm_bindgen]
 pub fn greeter(name: &str) -> Result<String, JsError> {
