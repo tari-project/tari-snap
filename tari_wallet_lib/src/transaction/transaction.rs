@@ -1,4 +1,5 @@
 use std::{fmt::Display, str::FromStr};
+use serde::{Deserialize, Serialize};
 use tari_template_lib::Hash;
 
 use crate::{types::PublicKey, substate::SubstateAddress, hashing::{EngineHashDomainLabel, hasher}, shard_id::ShardId};
@@ -6,7 +7,7 @@ use crate::{types::PublicKey, substate::SubstateAddress, hashing::{EngineHashDom
 use super::{signature::TransactionSignature, transaction_id::TransactionId, instruction::Instruction, builder::TransactionBuilder};
 
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Transaction {
     id: TransactionId,
     fee_instructions: Vec<Instruction>,

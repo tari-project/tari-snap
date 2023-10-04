@@ -209,19 +209,26 @@ async function sendWalletRequest(request: JsonRpcRequest<Json[] | Record<string,
 }
 
 async function signingTest(request: JsonRpcRequest<Json[] | Record<string, Json>>) {
+  // get metamask's private key
   const entropy = await snap.request({
     method: 'snap_getBip44Entropy',
     params: {
       coinType: 12345678,
     },
   });
-
   const deriveTariKey = await getBIP44AddressKeyDeriver(entropy);
   const tariNode = await deriveTariKey(0);
   const privateKey = tariNode.privateKey;
-  const ristrettoPrivateKey = tari_wallet_lib.build_ristretto_private_key(privateKey);
 
-  return { privateKey, ristrettoPrivateKey }
+  // build and sign transaction using the wasm lib
+  // TODO: read parameters from the JS request
+  const destination_public_key = "";
+  const resource_address = "";
+  const amount = 100;
+  const fee = 1;
+  const transaction = tari_wallet_lib.create_transfer_transaction(privateKey, destination_public_key, resource_address, amount, fee);
+
+  return { transaction }
 }
 
 /**

@@ -2,11 +2,12 @@ use std::{
     fmt,
     fmt::{Display, Formatter}, convert::TryFrom,
 };
+use serde::{Serialize, Deserialize};
 use tari_crypto::tari_utilities::hex::{from_hex, Hex};
 
 use crate::types::FixedHashSizeError;
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Default, Serialize, Deserialize)]
 pub struct TransactionId {
     id: [u8; 32],
 }
