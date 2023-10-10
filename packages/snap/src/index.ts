@@ -208,6 +208,23 @@ async function sendWalletRequest(request: JsonRpcRequest<Json[] | Record<string,
   }
 }
 
+async function getPublicKey(request: JsonRpcRequest<Json[] | Record<string, Json>>) {
+  // get metamask's private key
+  const entropy = await snap.request({
+    method: 'snap_getBip44Entropy',
+    params: {
+      coinType: 12345678,
+    },
+  });
+  const deriveTariKey = await getBIP44AddressKeyDeriver(entropy);
+  const tariNode = await deriveTariKey(0);
+  const privateKey = tariNode.privateKey;
+
+  const public_key = tari_wallet_lib.build_ristretto_public_key(privateKey);
+
+  return public_key;
+}
+
 async function signingTest(request: JsonRpcRequest<Json[] | Record<string, Json>>) {
   // get metamask's private key
   const entropy = await snap.request({
@@ -222,13 +239,13 @@ async function signingTest(request: JsonRpcRequest<Json[] | Record<string, Json>
 
   // build and sign transaction using the wasm lib
   // TODO: read parameters from the JS request
-  const destination_public_key = "";
-  const resource_address = "";
-  const amount = 100;
-  const fee = 1;
+  const destination_public_key = "e094562db55047cf46be3e9811eb647316ccdbd06f1793262bc22abb2c98b65d";
+  const resource_address = "resource_0101010101010101010101010101010101010101010101010101010101010101";
+  const amount = BigInt(10);
+  const fee = BigInt(1);
   const transaction = tari_wallet_lib.create_transfer_transaction(privateKey, destination_public_key, resource_address, amount, fee);
 
-  return { transaction }
+  return transaction;
 }
 
 /**
@@ -253,6 +270,8 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request }) => 
       return getWalletToken(request);
     case 'sendWalletRequest':
       return sendWalletRequest(request);
+    case 'getPublicKey':
+      return getPublicKey(request);
     case 'signingTest':
       return signingTest(request);
     default:

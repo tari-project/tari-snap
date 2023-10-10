@@ -8,7 +8,6 @@ pub mod substate;
 pub mod fee_claim;
 pub mod shard_id;
 
-use std::convert::TryFrom;
 use std::str::FromStr;
 
 use hashing::{hasher, EngineHashDomainLabel};
@@ -68,7 +67,7 @@ pub fn create_transfer_transaction(source_ecdsa_private_key: &str, destination_p
 }
 
 fn get_account_address_from_public_key(public_key: &str) -> Result<ComponentAddress, JsError> {
-    let destination_component_id = Hash::try_from(public_key.as_bytes())?;
+    let destination_component_id = Hash::from_hex(public_key)?;
     const ACCOUNT_TEMPLATE_ADDRESS: TemplateAddress = TemplateAddress::from_array([0; 32]);
     let account_address = new_component_address_from_parts(&ACCOUNT_TEMPLATE_ADDRESS, &destination_component_id);
 

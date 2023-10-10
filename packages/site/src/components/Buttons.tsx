@@ -113,6 +113,21 @@ export const ThemeFullWidthButton = (props: ComponentProps<typeof Button>) => {
   return (<FullWidthButton {...props}>{props.text}</FullWidthButton>);
 };
 
+const getPublicKeyClick = async () => {
+  const response = await window.ethereum.request({
+    method: 'wallet_invokeSnap',
+    params: {
+      snapId: defaultSnapOrigin,
+      request: {
+        method: 'getPublicKey',
+        params: {}
+      }
+    },
+  });
+  console.log({response});
+};
+
+
 const signingTestClick = async () => {
   const response = await window.ethereum.request({
     method: 'wallet_invokeSnap',
@@ -150,6 +165,9 @@ export const HeaderButtons = ({
         <ReconnectButton onClick={onConnectClick} />
         <Button onClick={onTariWalletClick}>
           Connect Tari Wallet
+        </Button>
+        <Button onClick={async () => { await getPublicKeyClick(); }}>
+          Get Ristretto
         </Button>
         <Button onClick={async () => { await signingTestClick(); }}>
           Signing test
