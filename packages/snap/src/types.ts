@@ -13,3 +13,8 @@ export type WalletRequest = {
     method: string,
     params: Object
 };
+
+export type IndexerRequest = {
+    method: string,
+    params: Object
+};

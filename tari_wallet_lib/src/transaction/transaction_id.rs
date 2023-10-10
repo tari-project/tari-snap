@@ -4,11 +4,13 @@ use std::{
 };
 use serde::{Serialize, Deserialize};
 use tari_crypto::tari_utilities::hex::{from_hex, Hex};
-
+use crate::serde_with;
 use crate::types::FixedHashSizeError;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Default, Serialize, Deserialize)]
+#[serde(transparent)]
 pub struct TransactionId {
+    #[serde(with = "serde_with::hex")]
     id: [u8; 32],
 }
 

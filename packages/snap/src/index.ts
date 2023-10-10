@@ -6,6 +6,7 @@ import * as walletClient from './tari_wallet_client';
 import { int_array_to_resource_address } from './tari_wallet_client';
 import { getBIP44AddressKeyDeriver } from '@metamask/key-tree';
 import * as tari_wallet_lib from './tari_wallet_lib';
+import { sendIndexerRequest } from './tari_indexer_client';
 
 // Due to a bug of how brfs interacts with babel, we need to use require() syntax instead of import pattern
 // https://github.com/browserify/brfs/issues/39
@@ -244,8 +245,46 @@ async function signingTest(request: JsonRpcRequest<Json[] | Record<string, Json>
   const amount = BigInt(10);
   const fee = BigInt(1);
   const transaction = tari_wallet_lib.create_transfer_transaction(privateKey, destination_public_key, resource_address, amount, fee);
+  const public_key = tari_wallet_lib.build_ristretto_public_key(privateKey);
+  const account_component = tari_wallet_lib.get_account_component_address(public_key);
+  const dest_account_component = tari_wallet_lib.get_account_component_address(destination_public_key);
 
-  return transaction;
+  // send the transaction to the indexer
+  // TODO: parameterize the indexer url
+  const indexer_url = 'http://127.0.0.1:18300';
+  const indexer_request = {
+    method: 'submit_transaction',
+    params: {
+      transaction,
+      is_dry_run: false,
+      required_substates: [
+        {
+          address: account_component,
+          version: null
+        },
+        {
+          address: dest_account_component,
+          version: null
+        },
+        {
+          address: resource_address,
+          version: null
+        }
+      ],
+    }
+  };
+  await sendIndexerRequest(indexer_url, indexer_request);
+  
+  const transaction_id = transaction.id;
+  // TODO: keep polling the indexer until we get a result for the transaction
+  const result = await sendIndexerRequest(indexer_url, {
+    method: 'get_transaction_result',
+    params: {
+      transaction_id
+    }
+  });
+  
+  return { transaction_id, result };
 }
 
 /**

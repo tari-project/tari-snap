@@ -1,7 +1,7 @@
 use std::{fmt::Display, str::FromStr};
 use serde::{Deserialize, Serialize};
 use tari_template_lib::Hash;
-
+use crate::serde_with;
 use crate::{types::PublicKey, substate::SubstateAddress, hashing::{EngineHashDomainLabel, hasher}, shard_id::ShardId};
 
 use super::{signature::TransactionSignature, transaction_id::TransactionId, instruction::Instruction, builder::TransactionBuilder};
@@ -133,8 +133,9 @@ impl Transaction {
     }
 }
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub struct SubstateRequirement {
+    #[serde(with = "serde_with::string")]
     address: SubstateAddress,
     version: Option<u32>,
 }
