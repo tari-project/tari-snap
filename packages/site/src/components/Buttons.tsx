@@ -113,35 +113,6 @@ export const ThemeFullWidthButton = (props: ComponentProps<typeof Button>) => {
   return (<FullWidthButton {...props}>{props.text}</FullWidthButton>);
 };
 
-const getAccountDataClick = async () => {
-  const response = await window.ethereum.request({
-    method: 'wallet_invokeSnap',
-    params: {
-      snapId: defaultSnapOrigin,
-      request: {
-        method: 'getAccountData',
-        params: {}
-      }
-    },
-  });
-  console.log({response});
-};
-
-
-const signingTestClick = async () => {
-  const response = await window.ethereum.request({
-    method: 'wallet_invokeSnap',
-    params: {
-      snapId: defaultSnapOrigin,
-      request: {
-        method: 'signingTest',
-        params: {}
-      }
-    },
-  });
-  console.log({response});
-};
-
 export const HeaderButtons = ({
   metamaskState,
   metamaskDispatch,
@@ -162,12 +133,6 @@ export const HeaderButtons = ({
     return (
       <Stack direction="row" spacing={2}>
         <ReconnectButton onClick={onConnectClick} />
-        <Button onClick={async () => { await getAccountDataClick(); }}>
-          Get Account Data
-        </Button>
-        <Button onClick={async () => { await signingTestClick(); }}>
-          Transfer Test
-        </Button>
       </Stack>
     );
   }
