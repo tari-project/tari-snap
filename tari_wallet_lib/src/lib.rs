@@ -24,6 +24,12 @@ use tari_crypto::tari_utilities::hex::Hex;
 use tari_crypto::ristretto::{RistrettoSecretKey, RistrettoPublicKey};
 
 #[wasm_bindgen]
+pub fn build_ristretto_private_key(ecdsa_private_key: &str) -> Result<String, JsError> {
+    let private_key = RistrettoSecretKey::from_hex(ecdsa_private_key)?;
+    Ok(private_key.to_hex())
+}
+
+#[wasm_bindgen]
 pub fn build_ristretto_public_key(ecdsa_private_key: &str) -> Result<String, JsError> {
     let private_key = RistrettoSecretKey::from_hex(ecdsa_private_key)?;
     let public_key = RistrettoPublicKey::from_secret_key(&private_key);

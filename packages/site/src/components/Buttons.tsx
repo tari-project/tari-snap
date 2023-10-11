@@ -113,13 +113,13 @@ export const ThemeFullWidthButton = (props: ComponentProps<typeof Button>) => {
   return (<FullWidthButton {...props}>{props.text}</FullWidthButton>);
 };
 
-const getPublicKeyClick = async () => {
+const getAccountDataClick = async () => {
   const response = await window.ethereum.request({
     method: 'wallet_invokeSnap',
     params: {
       snapId: defaultSnapOrigin,
       request: {
-        method: 'getPublicKey',
+        method: 'getAccountData',
         params: {}
       }
     },
@@ -166,11 +166,11 @@ export const HeaderButtons = ({
         <Button onClick={onTariWalletClick}>
           Connect Tari Wallet
         </Button>
-        <Button onClick={async () => { await getPublicKeyClick(); }}>
-          Get Ristretto
+        <Button onClick={async () => { await getAccountDataClick(); }}>
+          Get Account Data
         </Button>
         <Button onClick={async () => { await signingTestClick(); }}>
-          Signing test
+          Transfer Test
         </Button>
       </Stack>
     );

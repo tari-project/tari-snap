@@ -7,6 +7,7 @@ import { int_array_to_resource_address } from './tari_wallet_client';
 import { getBIP44AddressKeyDeriver } from '@metamask/key-tree';
 import * as tari_wallet_lib from './tari_wallet_lib';
 import { sendIndexerRequest } from './tari_indexer_client';
+import { getRistrettoKeyPair } from './keys';
 
 // Due to a bug of how brfs interacts with babel, we need to use require() syntax instead of import pattern
 // https://github.com/browserify/brfs/issues/39
@@ -209,21 +210,11 @@ async function sendWalletRequest(request: JsonRpcRequest<Json[] | Record<string,
   }
 }
 
-async function getPublicKey(request: JsonRpcRequest<Json[] | Record<string, Json>>) {
-  // get metamask's private key
-  const entropy = await snap.request({
-    method: 'snap_getBip44Entropy',
-    params: {
-      coinType: 12345678,
-    },
-  });
-  const deriveTariKey = await getBIP44AddressKeyDeriver(entropy);
-  const tariNode = await deriveTariKey(0);
-  const privateKey = tariNode.privateKey;
+async function getAccountData(request: JsonRpcRequest<Json[] | Record<string, Json>>) {
+  const accountIndex = 0;
+  const { public_key } = await getRistrettoKeyPair(accountIndex);
 
-  const public_key = tari_wallet_lib.build_ristretto_public_key(privateKey);
-
-  return public_key;
+  return { public_key }
 }
 
 async function signingTest(request: JsonRpcRequest<Json[] | Record<string, Json>>) {
@@ -309,8 +300,8 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request }) => 
       return getWalletToken(request);
     case 'sendWalletRequest':
       return sendWalletRequest(request);
-    case 'getPublicKey':
-      return getPublicKey(request);
+    case 'getAccountData':
+      return getAccountData(request);
     case 'signingTest':
       return signingTest(request);
     default:
