@@ -4,6 +4,7 @@ import * as tari_wallet_lib from './tari_wallet_lib';
 import { decode_resource_address, decode_vault_id, sendIndexerRequest } from './tari_indexer_client';
 import { getRistrettoKeyPair } from './keys';
 import { TransferRequest } from './types';
+import { truncateText } from './text';
 
 // Due to a bug of how brfs interacts with babel, we need to use require() syntax instead of import pattern
 // https://github.com/browserify/brfs/issues/39
@@ -145,15 +146,13 @@ async function transfer(request: JsonRpcRequest<Json[] | Record<string, Json>>) 
   const get_params = { transaction_id };
   const result = await sendIndexerRequest(indexer_url, get_method, get_params);
 
-  // TODO: use "snap_notify" (it was not working for me when I developed this)
   // TODO: notify errors
-  snap.request({
-    method: 'snap_dialog',
+  const message = 'Transaction "' + truncateText(transaction_id, 10) + '" confirmed';
+  await snap.request({
+    method: 'snap_notify',
     params: {
-      type: 'alert',
-      content: panel([
-        heading('Transaction "' + transaction_id + '" confirmed'),
-      ]),
+      type: 'inApp',
+      message,
     },
   });
 
