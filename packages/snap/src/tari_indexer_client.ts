@@ -1,8 +1,4 @@
-import { IndexerRequest, TariPermission, WalletRequest } from "./types";
-
-export async function tariIndexerRequest(tari_indexer_url: string, method: string, params: any) {
-    const baseUrl = `${tari_indexer_url}`;
-
+export async function sendIndexerRequest(tari_indexer_url: string, method: string, params: Object) {
     let headers: HeadersInit = {
         'content-type': 'application/json',
         accept: 'application/json',
@@ -21,18 +17,22 @@ export async function tariIndexerRequest(tari_indexer_url: string, method: strin
         body: JSON.stringify(body),
     };
 
-    const response = await fetch(baseUrl, requestParams);
-    return response;
+    // TODO: handle/display/log errors
+    const response = await fetch(tari_indexer_url, requestParams);
+    const { result} = await response.json();
+    return result;
 }
 
-export async function sendIndexerRequest(tari_indexer_url: string, indexerRequest: IndexerRequest) {
-    const { method, params } = indexerRequest;
-    const response = await tariIndexerRequest(tari_indexer_url, method, params);
-    return response;
+export function decode_resource_address(tagged: Object): string {
+    const int_array = extract_tagged_int_array(tagged);
+    const hex = int_array_to_hex(int_array);
+    return `resource_${hex}`;
 }
 
-export function int_array_to_resource_address(int_array: number[]) {
-    return "resource_" + int_array_to_hex(int_array);
+export function decode_vault_id(tagged: Object): string {
+    const int_array = extract_tagged_int_array(tagged);
+    const hex = int_array_to_hex(int_array);
+    return `vault_${hex}`;
 }
 
 export function int_array_to_hex(int_array: number[]) {
@@ -40,4 +40,9 @@ export function int_array_to_hex(int_array: number[]) {
         var h = (i).toString(16);
         return h.length % 2 ? '0' + h : h;
     }).join('');
+}
+
+export function extract_tagged_int_array(tagged: Object): number[] {
+    // position 0 is the binary tag and position 1 is the actual value
+    return tagged['@@TAGGED@@'][1];
 }

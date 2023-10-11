@@ -6,7 +6,7 @@ import * as walletClient from './tari_wallet_client';
 import { int_array_to_resource_address } from './tari_wallet_client';
 import { getBIP44AddressKeyDeriver } from '@metamask/key-tree';
 import * as tari_wallet_lib from './tari_wallet_lib';
-import { sendIndexerRequest } from './tari_indexer_client';
+import { decode_resource_address, decode_vault_id, int_array_to_hex, sendIndexerRequest } from './tari_indexer_client';
 import { getRistrettoKeyPair } from './keys';
 
 // Due to a bug of how brfs interacts with babel, we need to use require() syntax instead of import pattern
@@ -210,12 +210,6 @@ async function sendWalletRequest(request: JsonRpcRequest<Json[] | Record<string,
   }
 }
 
-async function getAccountData(request: JsonRpcRequest<Json[] | Record<string, Json>>) {
-  const accountIndex = 0;
-  const { public_key } = await getRistrettoKeyPair(accountIndex);
-
-  return { public_key }
-}
 
 async function signingTest(request: JsonRpcRequest<Json[] | Record<string, Json>>) {
   // get metamask's private key
@@ -243,39 +237,83 @@ async function signingTest(request: JsonRpcRequest<Json[] | Record<string, Json>
   // send the transaction to the indexer
   // TODO: parameterize the indexer url
   const indexer_url = 'http://127.0.0.1:18300';
-  const indexer_request = {
-    method: 'submit_transaction',
-    params: {
-      transaction,
-      is_dry_run: false,
-      required_substates: [
-        {
-          address: account_component,
-          version: null
-        },
-        {
-          address: dest_account_component,
-          version: null
-        },
-        {
-          address: resource_address,
-          version: null
-        }
-      ],
-    }
+  const submit_method = 'submit_transaction';
+  const submit_params = {
+    transaction,
+    is_dry_run: false,
+    required_substates: [
+      {
+        address: account_component,
+        version: null
+      },
+      {
+        address: dest_account_component,
+        version: null
+      },
+      {
+        address: resource_address,
+        version: null
+      }
+    ],
   };
-  await sendIndexerRequest(indexer_url, indexer_request);
+  await sendIndexerRequest(indexer_url, submit_method, submit_params);
   
-  const transaction_id = transaction.id;
   // TODO: keep polling the indexer until we get a result for the transaction
-  const result = await sendIndexerRequest(indexer_url, {
-    method: 'get_transaction_result',
-    params: {
-      transaction_id
-    }
-  });
-  
+  const transaction_id = transaction.id;
+  const get_method = 'get_transaction_result';
+  const get_params = { transaction_id };
+  const result = await sendIndexerRequest(indexer_url, get_method, get_params);  
   return { transaction_id, result };
+}
+
+async function getAccountData(request: JsonRpcRequest<Json[] | Record<string, Json>>) {
+  const accountIndex = 0;
+  const { public_key } = await getRistrettoKeyPair(accountIndex);
+
+  const component_address = tari_wallet_lib.get_account_component_address(public_key);
+
+  // TODO: parameterize the indexer url
+  const indexer_url = 'http://127.0.0.1:18300';
+
+  const method = 'inspect_substate';
+  const params = {
+    address: component_address,
+    // to get the latest version
+    version: null,
+  };
+  const result = await sendIndexerRequest(indexer_url, method, params);
+  const vaults = result.substate_contents.substate.Component.state.vaults;
+  
+  const vault_ids = vaults.map((v) => { return decode_vault_id(v[1]); });
+
+  const balances = await Promise.all(vault_ids.map(async (v) => {
+    const result = await sendIndexerRequest(indexer_url, 'inspect_substate', {
+      address: v,
+      version: null
+    });
+
+    const container = result.substate_contents.substate.Vault.resource_container;
+
+    if (container.Confidential) {
+      const data = container.Confidential;
+      const resource_address = decode_resource_address(data.address);
+      const balance = data.revealed_amount;
+      return { resource_address, balance, isConfidential: true };
+    } else if (container.Fungible) {
+      const data = container.Fungible;
+      const resource_address = decode_resource_address(data.address);
+      const balance = data.amount;
+      return { resource_address, balance, isConfidential: false };
+    } else if (container.NonFungible) {
+      // TODO: decode nfts
+      return null;
+    } else {
+      // TODO: handle errors
+      return null;
+    }
+  }));
+
+  return { public_key, component_address, balances }
 }
 
 /**
