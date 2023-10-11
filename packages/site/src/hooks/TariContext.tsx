@@ -42,7 +42,6 @@ export enum TariActions {
 const reducer: Reducer<TariState, TariDispatch> = (state, action) => {
   switch (action.type) {
     case TariActions.SetAccount:
-      console.log({setAccount: action.payload});
       return {
         ...state,
         account: action.payload,

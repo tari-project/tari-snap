@@ -1,7 +1,7 @@
 import { Json, JsonRpcRequest, OnRpcRequestHandler } from '@metamask/snaps-types';
 import { heading, panel, text } from '@metamask/snaps-ui';
 import { getState, setState } from './state';
-import { SendWalletRequestParams, SetWalletParams, WalletRequest } from './types';
+import { SendWalletRequestParams, SetWalletParams, TransferRequest, WalletRequest } from './types';
 import * as walletClient from './tari_wallet_client';
 import { int_array_to_resource_address } from './tari_wallet_client';
 import { getBIP44AddressKeyDeriver } from '@metamask/key-tree';
@@ -257,12 +257,12 @@ async function signingTest(request: JsonRpcRequest<Json[] | Record<string, Json>
     ],
   };
   await sendIndexerRequest(indexer_url, submit_method, submit_params);
-  
+
   // TODO: keep polling the indexer until we get a result for the transaction
   const transaction_id = transaction.id;
   const get_method = 'get_transaction_result';
   const get_params = { transaction_id };
-  const result = await sendIndexerRequest(indexer_url, get_method, get_params);  
+  const result = await sendIndexerRequest(indexer_url, get_method, get_params);
   return { transaction_id, result };
 }
 
@@ -283,7 +283,7 @@ async function getAccountData(request: JsonRpcRequest<Json[] | Record<string, Js
   };
   const result = await sendIndexerRequest(indexer_url, method, params);
   const vaults = result.substate_contents.substate.Component.state.vaults;
-  
+
   const vault_ids = vaults.map((v) => { return decode_vault_id(v[1]); });
 
   const balances = await Promise.all(vault_ids.map(async (v) => {
@@ -316,6 +316,50 @@ async function getAccountData(request: JsonRpcRequest<Json[] | Record<string, Js
   return { public_key, component_address, balances }
 }
 
+async function transfer(request: JsonRpcRequest<Json[] | Record<string, Json>>) {
+  const params = request.params as TransferRequest;
+  const { amount, resource_address, destination_public_key, fee } = params;
+
+  const accountIndex = 0;
+  const { secret_key, public_key } = await getRistrettoKeyPair(accountIndex);
+
+  // build and sign transaction using the wasm lib
+  const transaction = tari_wallet_lib.create_transfer_transaction(secret_key, destination_public_key, resource_address, BigInt(amount), BigInt(fee));
+  const account_component = tari_wallet_lib.get_account_component_address(public_key);
+  const dest_account_component = tari_wallet_lib.get_account_component_address(destination_public_key);
+
+  // send the transaction to the indexer
+  // TODO: parameterize the indexer url
+  const indexer_url = 'http://127.0.0.1:18300';
+  const submit_method = 'submit_transaction';
+  const submit_params = {
+    transaction,
+    is_dry_run: false,
+    required_substates: [
+      {
+        address: account_component,
+        version: null
+      },
+      {
+        address: dest_account_component,
+        version: null
+      },
+      {
+        address: resource_address,
+        version: null
+      }
+    ],
+  };
+  await sendIndexerRequest(indexer_url, submit_method, submit_params);
+
+  // TODO: keep polling the indexer until we get a result for the transaction
+  const transaction_id = transaction.id;
+  const get_method = 'get_transaction_result';
+  const get_params = { transaction_id };
+  const result = await sendIndexerRequest(indexer_url, get_method, get_params);
+  return { transaction_id, result };
+}
+
 /**
  * Handle incoming JSON-RPC requests, sent through `wallet_invokeSnap`.
  *
@@ -340,6 +384,8 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request }) => 
       return sendWalletRequest(request);
     case 'getAccountData':
       return getAccountData(request);
+    case 'transfer':
+      return transfer(request);
     case 'signingTest':
       return signingTest(request);
     default:

@@ -44,13 +44,13 @@ pub fn get_account_component_address(public_key: &str) -> Result<String, JsError
 
 #[wasm_bindgen]
 pub fn create_transfer_transaction(
-    source_ecdsa_private_key: &str,
+    source_private_key: &str,
     destination_public_key: &str,
     resource_address: &str,
     amount: i64,
     fee: i64,
 ) -> Result<JsValue, JsError> {
-    let source_private_key = RistrettoSecretKey::from_hex(source_ecdsa_private_key)?;
+    let source_private_key = RistrettoSecretKey::from_hex(source_private_key)?;
     let source_public_key = RistrettoPublicKey::from_secret_key(&source_private_key);
     let source_account_address = get_account_address_from_public_key(&source_public_key.to_hex())?;
 
