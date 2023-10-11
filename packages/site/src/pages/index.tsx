@@ -39,13 +39,17 @@ function Index() {
 
     const getAccount = async () => {
         try {
-            const walletRequest = {
-                method: 'accounts.get_default',
-                params: {}
-            };
-
-            const account = await sendWalletRequest(tari.token, walletRequest);
-            return account
+            const response = await window.ethereum.request({
+                method: 'wallet_invokeSnap',
+                params: {
+                    snapId: defaultSnapOrigin,
+                    request: {
+                        method: 'getAccountData',
+                        params: {}
+                    }
+                },
+            });
+            return response;
         } catch (e) {
             console.error(e);
             metamaskDispatch({ type: MetamaskActions.SetError, payload: e });
@@ -57,8 +61,7 @@ function Index() {
         const accountData = await getAccount();
         if (accountData) {
             const payload: AccountState = {
-                name: accountData.account.name,
-                address: accountData.account.address.Component,
+                address: accountData.component_address,
                 public_key: accountData.public_key,
             };
 
@@ -70,10 +73,8 @@ function Index() {
     }
 
     useEffect(() => {
-        if (tari.token) {
-            refreshAccountData();
-        }
-    }, [tari.token]);
+        refreshAccountData();
+    }, []);
 
     interface TabPanelProps {
         children?: React.ReactNode;
@@ -112,8 +113,8 @@ function Index() {
     return (
         <Box sx={{ mt: 4 }}>
             <Stack direction='row' alignItems="center" justifyContent="center">
-                <MenuItem sx={{ fontSize: 20, fontWeight: tab==0 ? 'bold' : 'default'}} onClick={selectBalances}>Balances</MenuItem>
-                <MenuItem sx={{ fontSize: 20, fontWeight: tab==1 ? 'bold' : 'default'}} onClick={selectTransactions}>Transactions</MenuItem>
+                <MenuItem sx={{ fontSize: 20, fontWeight: tab == 0 ? 'bold' : 'default' }} onClick={selectBalances}>Balances</MenuItem>
+                <MenuItem sx={{ fontSize: 20, fontWeight: tab == 1 ? 'bold' : 'default' }} onClick={selectTransactions}>Transactions</MenuItem>
             </Stack>
 
             {/* Balances */}

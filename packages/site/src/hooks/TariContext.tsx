@@ -7,14 +7,12 @@ import {
 } from 'react';
 
 export type TariState = {
-  token?: string;
   account?: AccountState;
   balances: Object[],
   transactions: Object[],
 };
 
 export type AccountState = {
-  name: string,
   address: string,
   public_key: string,
 };
@@ -36,7 +34,6 @@ export const TariContext = createContext<
 ]);
 
 export enum TariActions {
-  SetToken = 'SetToken',
   SetAccount = 'SetAccount',
   SetBalances = 'SetBalances',
   SetTransactions = 'SetTransactions',
@@ -44,11 +41,6 @@ export enum TariActions {
 
 const reducer: Reducer<TariState, TariDispatch> = (state, action) => {
   switch (action.type) {
-    case TariActions.SetToken:
-      return {
-        ...state,
-        token: action.payload,
-      };
     case TariActions.SetAccount:
       console.log({setAccount: action.payload});
       return {

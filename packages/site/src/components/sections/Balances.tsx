@@ -17,7 +17,7 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import IconButton from '@mui/material/IconButton';
 import Box from '@mui/material/Box';
 import { ThemeButton } from '../Buttons';
-import { sendWalletRequest } from '../../utils/snap';
+import { getAccountData, sendWalletRequest } from '../../utils/snap';
 
 function Balances() {
     const [metamaskState, metamaskDispatch] = useContext(MetaMaskContext);
@@ -28,19 +28,12 @@ function Balances() {
 
     const getBalances = async () => {
         try {
-            if (!tari || !tari.account || !tari.account.address) {
-                return [];
+            const data = await getAccountData();
+            if (!data || !data.balances) {
+                return [];  
             }
-            const walletRequest = {
-                method: 'accounts.get_balances',
-                params: {
-                    account: tari.account.address,
-                    refresh: true,
-                }
-            };
 
-            const response = await sendWalletRequest(tari.token, walletRequest);
-            return response.balances;
+            return data.balances;
         } catch (e) {
             console.error(e);
             metamaskDispatch({ type: MetamaskActions.SetError, payload: e });
@@ -49,8 +42,7 @@ function Balances() {
     };
 
     const refreshAccountBalances = async () => {
-        const raw_balances = await getBalances();
-        let balances = raw_balances.map(b => { return ({ name: b.token_symbol || "Tari", address: b.resource_address, balance: b.balance }); });
+        const balances = await getBalances();
         if (balances.length > 0) {
             tariDispatch({
                 type: TariActions.SetBalances,
@@ -98,7 +90,7 @@ function Balances() {
                         <Stack direction="row" justifyContent="space-between" spacing={2}>
                             <Box>
                                 <Typography style={{ fontSize: 12 }} >
-                                    {tari.account?.name}
+                                    Account address
                                 </Typography>
                                 <Stack direction="row" alignItems="center" justifyContent="center">
                                     <Typography style={{ fontSize: 15 }} >
@@ -125,7 +117,6 @@ function Balances() {
                         <Table sx={{ minWidth: 650 }} aria-label="simple table">
                             <TableHead>
                                 <TableRow>
-                                    <TableCell sx={{ fontSize: 14 }}>Name</TableCell>
                                     <TableCell sx={{ fontSize: 14 }}>Resource Address</TableCell>
                                     <TableCell sx={{ fontSize: 14 }}>Balance</TableCell>
                                 </TableRow>
@@ -137,10 +128,7 @@ function Balances() {
                                             key={token.name}
                                             sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                                         >
-                                            <TableCell component="th" scope="row" sx={{ fontSize: 14 }}>
-                                                {token.name}
-                                            </TableCell>
-                                            <TableCell sx={{ fontSize: 14 }}>{token.address}</TableCell>
+                                            <TableCell sx={{ fontSize: 14 }}>{token.resource_address}</TableCell>
                                             <TableCell sx={{ fontSize: 14 }}> {token.balance}</TableCell>
                                         </TableRow>
                                     ))

@@ -146,7 +146,6 @@ export const HeaderButtons = ({
   metamaskState,
   metamaskDispatch,
   onConnectClick,
-  onTariWalletClick,
 }: {
   state: MetamaskState;
   onConnectClick(): unknown;
@@ -163,9 +162,6 @@ export const HeaderButtons = ({
     return (
       <Stack direction="row" spacing={2}>
         <ReconnectButton onClick={onConnectClick} />
-        <Button onClick={onTariWalletClick}>
-          Connect Tari Wallet
-        </Button>
         <Button onClick={async () => { await getAccountDataClick(); }}>
           Get Account Data
         </Button>

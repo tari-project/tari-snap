@@ -23,6 +23,7 @@ function Transactions() {
 
     const getTransactions = async () => {
         try {
+            /*
             if (!tari || !tari.token) {
                 return [];
             }
@@ -37,6 +38,7 @@ function Transactions() {
             if (response && response.transactions) {
                 return response.transactions;
             }
+            */
             return [];
         } catch (e) {
             console.error(e);
