@@ -84,8 +84,7 @@ function Balances() {
     };
 
     const handleGetTestCoinsClick = async () => {
-        const res = await getFreeTestCoins(1000, 1);
-        console.log({res});
+        await getFreeTestCoins(1000, 1);
     };
 
     return (

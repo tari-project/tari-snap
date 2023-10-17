@@ -22,28 +22,28 @@ function Transactions() {
     const [metamaskState, metamaskDispatch] = useContext(MetaMaskContext);
     const [tari, tariDispatch] = useContext(TariContext);
 
+    const process_raw_transaction = (t: Object) => {
+        if (t.Pending) {
+            return { status: 'Pending' };
+        } else if (t.Finalized) {
+            const id = t.Finalized.execution_result.finalize.transaction_hash;
+            const status = t.Finalized.final_decision === 'Commit' ? 'Accepted' : 'Rejected';
+            return { id, status };
+        } else {
+            return {};
+        }
+    }  
+
     const getTransactions = async () => {
         try {
-            //const transactions = await getAccountTransactions();
-            //console.log({transactions});
+            let transactions = [];
 
-            /*
-            if (!tari || !tari.token) {
-                return [];
+            const raw_transactions = await getAccountTransactions();
+            if (raw_transactions && raw_transactions.transaction_results) {
+                transactions = raw_transactions.transaction_results.map(process_raw_transaction);
             }
-            const walletRequest = {
-                method: 'transactions.get_all_by_status',
-                params: {
-                    status: null,
-                }
-            };
-            const response = await sendWalletRequest(tari.token, walletRequest);
 
-            if (response && response.transactions) {
-                return response.transactions;
-            }
-            */
-            return [];
+            return transactions;
         } catch (e) {
             console.error(e);
             metamaskDispatch({ type: MetamaskActions.SetError, payload: e });
@@ -91,15 +91,15 @@ function Transactions() {
                         {
                             tari.transactions.map((tx) => (
                                 <TableRow
-                                    key={tx[0].id}
+                                    key={tx.id}
                                     sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                                 >
                                     <TableCell component="th" scope="row" sx={{ fontSize: 14 }}>
-                                        {tx[0].id} <IconButton aria-label="copy" onClick={() => handleCopyClick(tx[0].id)}>
+                                        {tx.id} <IconButton aria-label="copy" onClick={() => handleCopyClick(tx.id)}>
                                             <ContentCopyIcon />
                                         </IconButton>
                                     </TableCell>
-                                    <TableCell sx={{ fontSize: 14 }}>{tx[2]}</TableCell>
+                                    <TableCell sx={{ fontSize: 14 }}>{tx.status}</TableCell>
                                 </TableRow>
                             ))
                         }
