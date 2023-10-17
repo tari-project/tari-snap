@@ -17,7 +17,8 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import IconButton from '@mui/material/IconButton';
 import Box from '@mui/material/Box';
 import { ThemeButton } from '../Buttons';
-import { getAccountData, sendWalletRequest } from '../../utils/snap';
+import { getAccountData, getFreeTestCoins, sendWalletRequest } from '../../utils/snap';
+import { defaultSnapOrigin } from '../../config/snap';
 
 function Balances() {
     const [metamaskState, metamaskDispatch] = useContext(MetaMaskContext);
@@ -82,6 +83,11 @@ function Balances() {
         setReceiveDialogOpen(false);
     };
 
+    const handleGetTestCoinsClick = async () => {
+        const res = await getFreeTestCoins(1000, 1);
+        console.log({res});
+    };
+
     return (
         <Container>
             {tari.account?.public_key ?
@@ -102,6 +108,7 @@ function Balances() {
                                 </Stack>
                             </Box>
                             <Stack direction="row" spacing={2}>
+                                <ThemeButton text="Get Test Coins" onClick={() => handleGetTestCoinsClick()}/>
                                 <ThemeButton text="Receive" onClick={handleReceiveDialogClickOpen}/>
                                 <ThemeButton text="Send" onClick={handleSendDialogClickOpen}/>
                             </Stack>

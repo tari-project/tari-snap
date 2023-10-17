@@ -1,9 +1,9 @@
 import { Json, JsonRpcRequest, OnRpcRequestHandler } from '@metamask/snaps-types';
 import { heading, panel, text } from '@metamask/snaps-ui';
 import * as tari_wallet_lib from './tari_wallet_lib';
-import { decode_resource_address, decode_vault_id, sendIndexerRequest } from './tari_indexer_client';
+import { decode_resource_address, decode_vault_id, sendIndexerRequest, substateExists } from './tari_indexer_client';
 import { getRistrettoKeyPair } from './keys';
-import { TransferRequest } from './types';
+import { GetFreeTestCoinsRequest, TransferRequest } from './types';
 import { truncateText } from './text';
 
 // Due to a bug of how brfs interacts with babel, we need to use require() syntax instead of import pattern
@@ -52,6 +52,9 @@ async function getAccountData(request: JsonRpcRequest<Json[] | Record<string, Js
     version: null,
   };
   const result = await sendIndexerRequest(indexer_url, method, params);
+  if (!result || !result.substate_contents) {
+    return { public_key, component_address, balances: [] }
+  }
   const vaults = result.substate_contents.substate.Component.state.vaults;
 
   const vault_ids = vaults.map((v: Object[]) => { return decode_vault_id(v[1]); });
@@ -159,6 +162,83 @@ async function transfer(request: JsonRpcRequest<Json[] | Record<string, Json>>) 
   return { transaction_id, result };
 }
 
+async function getTransactions(request: JsonRpcRequest<Json[] | Record<string, Json>>) {
+  const accountIndex = 0;
+  const { public_key } = await getRistrettoKeyPair(accountIndex);
+  const component_address = tari_wallet_lib.get_account_component_address(public_key);
+
+  // TODO: parameterize the indexer url
+  const indexer_url = 'http://127.0.0.1:18300';
+
+  const method = 'get_substate_transactions';
+  const params = {
+    address: component_address,
+    // TODO: store the latest known version in the snap storage
+    version: null,
+  };
+  const result = await sendIndexerRequest(indexer_url, method, params);
+
+  return result;
+}
+
+async function getFreeTestCoins(request: JsonRpcRequest<Json[] | Record<string, Json>>) {
+  const params = request.params as GetFreeTestCoinsRequest;
+  const { amount, fee } = params;
+
+  const userConfirmation = await snap.request({
+    method: 'snap_dialog',
+    params: {
+      type: 'confirmation',
+      content: panel([
+        heading('Transfer'),
+        text(`This website requests a deposit of free test coins into your accout. Do you want to proceed?`),
+        text('**Amount:** ' + amount),
+        text('**Fee:** ' + fee),
+      ])
+    },
+  });
+  if (!userConfirmation) {
+    return;
+  }
+
+  const accountIndex = 0;
+  const { secret_key, public_key } = await getRistrettoKeyPair(accountIndex);
+  const component_address = tari_wallet_lib.get_account_component_address(public_key);
+
+  // TODO: parameterize the indexer url
+  const indexer_url = 'http://127.0.0.1:18300';
+
+  let accountExists = await substateExists(indexer_url, component_address);
+  let is_new_account = !accountExists;
+
+  // build and sign transaction using the wasm lib
+  const transaction = tari_wallet_lib.create_free_test_coins_transaction(is_new_account, secret_key, BigInt(amount), BigInt(fee));
+  const account_component = tari_wallet_lib.get_account_component_address(public_key);
+
+  // send the transaction to the indexer
+  // TODO: parameterize the indexer url
+  const submit_method = 'submit_transaction';
+  const required_substates = [];
+  if (accountExists) {
+    required_substates.push(
+      {
+        address: account_component,
+        version: null
+      }
+    );
+  }
+  const submit_params = {
+    transaction,
+    is_dry_run: false,
+    required_substates,
+  };
+  await sendIndexerRequest(indexer_url, submit_method, submit_params);
+
+  // TODO: keep polling the indexer until we get a result for the transaction
+  const transaction_id = transaction.id;
+  return { transaction_id };
+}
+
 /**
  * Handle incoming JSON-RPC requests, sent through `wallet_invokeSnap`.
  *
@@ -177,8 +257,12 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request }) => 
   switch (request.method) {
     case 'getAccountData':
       return getAccountData(request);
+    case 'getTransactions':
+      return getTransactions(request);
     case 'transfer':
       return transfer(request);
+    case 'getFreeTestCoins':
+      return getFreeTestCoins(request);
     default:
       throw new Error('Method not found.');
   }

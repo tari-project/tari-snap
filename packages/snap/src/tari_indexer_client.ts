@@ -1,3 +1,30 @@
+
+
+async function rawIndexerCall(tari_indexer_url: string, method: string, params: Object) {
+    let headers: HeadersInit = {
+        'content-type': 'application/json',
+        accept: 'application/json',
+    };
+
+    const body = {
+        jsonrpc: '2.0',
+        method,
+        params,
+        id: 1
+    };
+
+    const requestParams: RequestInit = {
+        headers,
+        method: 'POST',
+        body: JSON.stringify(body),
+    };
+
+    // TODO: handle/display/log errors
+    const response = await fetch(tari_indexer_url, requestParams);
+    const json_response = await response.json();
+    return json_response;
+}
+
 export async function sendIndexerRequest(tari_indexer_url: string, method: string, params: Object) {
     let headers: HeadersInit = {
         'content-type': 'application/json',
@@ -19,8 +46,23 @@ export async function sendIndexerRequest(tari_indexer_url: string, method: strin
 
     // TODO: handle/display/log errors
     const response = await fetch(tari_indexer_url, requestParams);
-    const { result} = await response.json();
+    const { result } = await response.json();
     return result;
+}
+
+export async function substateExists(tari_indexer_url: string, substate_address: string) {
+    const method = 'get_substate';
+    const params = {
+        address: substate_address,
+        version: null
+    };
+    const result = await rawIndexerCall(tari_indexer_url, method, params);
+
+    if (result && !result.error) {
+        return true;
+    }
+
+    return false;
 }
 
 export function decode_resource_address(tagged: Object): string {

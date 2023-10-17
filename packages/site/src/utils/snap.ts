@@ -52,33 +52,6 @@ export const getSnap = async (version?: string): Promise<Snap | undefined> => {
   }
 };
 
-export const setTariWallet = async () => {
-  let tari_wallet_daemon_url = "http://127.0.0.1:9000";
-
-  // The "setWallet" snap method returns a wallet token to avoid repetitive user interactions
-  let token = await window.ethereum.request({
-    method: 'wallet_invokeSnap',
-    params: { snapId: defaultSnapOrigin, request: { method: 'setWallet', params: { tari_wallet_daemon_url } } },
-  });
-  return token;
-};
-
-export const getTariWalletToken = async () => {
-  return window.ethereum.request({
-    method: 'wallet_invokeSnap',
-    params: {
-      snapId: defaultSnapOrigin,
-      request: {
-        method: 'getWalletToken',
-        params: {
-          // TODO: the "Admin" permission should never be used, find a workaround
-          permissions:['Admin', 'AccountInfo', 'KeyList', 'TransactionGet', {'TransactionSend': null}]
-        }
-      }
-    },
-  });
-};
-
 export const getAccountData = async () => {
   return window.ethereum.request({
     method: 'wallet_invokeSnap',
@@ -92,27 +65,29 @@ export const getAccountData = async () => {
   });
 };
 
-export const getTariWalletPublicKey = async (token: string) => {
+export const getAccountTransactions = async () => {
   return window.ethereum.request({
     method: 'wallet_invokeSnap',
     params: {
       snapId: defaultSnapOrigin,
       request: {
-        method: 'getWalletPublicKey',
-        params: { token }
+        method: 'getTransactions',
+        params: {}
       }
     },
   });
 };
 
-export const sendWalletRequest = async (token: string, walletRequest: Object) => {
-  return window.ethereum.request({
+export const getFreeTestCoins = async (amount: number, fee: number) => {
+  return await window.ethereum.request({
     method: 'wallet_invokeSnap',
     params: {
       snapId: defaultSnapOrigin,
       request: {
-        method: 'sendWalletRequest',
-        params: { token, walletRequest }
+        method: 'getFreeTestCoins',
+        params: {
+          amount, fee
+        }
       }
     },
   });

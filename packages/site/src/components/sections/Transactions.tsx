@@ -2,6 +2,7 @@ import { useContext, useEffect } from 'react';
 import { MetamaskActions, MetaMaskContext, TariActions, TariContext } from '../../hooks';
 
 import {
+    getAccountTransactions,
     sendWalletRequest,
 } from '../../utils';
 import Container from '@mui/material/Container';
@@ -23,6 +24,9 @@ function Transactions() {
 
     const getTransactions = async () => {
         try {
+            //const transactions = await getAccountTransactions();
+            //console.log({transactions});
+
             /*
             if (!tari || !tari.token) {
                 return [];

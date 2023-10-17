@@ -4,3 +4,8 @@ export type TransferRequest = {
     destination_public_key: string,
     fee: number,
 };
+
+export type GetFreeTestCoinsRequest = {
+    amount: number,
+    fee: number,
+};
