@@ -11,8 +11,9 @@ import React, { useContext, useEffect } from "react";
 import CloseIcon from '@mui/icons-material/Close';
 import IconButton from "@mui/material/IconButton";
 import { MetaMaskContext, MetamaskActions, TariContext } from "../hooks";
-import { resource_address_to_int_array, sendWalletRequest } from "../utils/snap";
 import { ThemeFullWidthButton } from "./Buttons";
+import { truncateText } from "../utils/text";
+import { defaultSnapOrigin } from "../config/snap";
 
 export interface SendDialogProps {
     open: boolean;
@@ -32,7 +33,7 @@ export function SendDialog(props: SendDialogProps) {
     const [recipient, setRecipient] = React.useState('');
 
     // clear dialog form each time it closes
-    useEffect(() => { 
+    useEffect(() => {
         if (!open && shouldRender()) {
             refreshForm();
         }
@@ -55,7 +56,7 @@ export function SendDialog(props: SendDialogProps) {
 
     const refreshForm = () => {
         if (accountBalances && accountBalances.length > 0) {
-            setToken(accountBalances[0].address);
+            setToken(accountBalances[0].resource_address);
             setAmount(0);
             setRecipient('');
         }
@@ -78,11 +79,11 @@ export function SendDialog(props: SendDialogProps) {
     };
 
     const getTokenBalance = (tokenAddress: string) => {
-        if(!tokenAddress || !props.accountBalances) {
+        if (!tokenAddress || !props.accountBalances) {
             return 0;
         }
 
-        const element = props.accountBalances.find((b) => b.address === tokenAddress);
+        const element = props.accountBalances.find((b) => b.resource_address === tokenAddress);
         if (element) {
             return element.balance;
         } else return 0;
@@ -90,22 +91,22 @@ export function SendDialog(props: SendDialogProps) {
 
     const handleSendClick = async () => {
         try {
-            console.log({token});
-            const resource_address = resource_address_to_int_array(token);
-            const walletRequest = {
-                method: 'accounts.transfer',
+            const response = await window.ethereum.request({
+                method: 'wallet_invokeSnap',
                 params: {
-                    account: null,
-                    amount: parseInt(amount),
-                    resource_address,
-                    destination_public_key: recipient,
-                    fee: 1,
-                }
-            };
-            console.log({token: tariState.token, walletRequest });
-
-            const {transaction_id, result} = await sendWalletRequest(tariState.token, walletRequest);
-            console.log({transaction_id, result});
+                    snapId: defaultSnapOrigin,
+                    request: {
+                        method: 'transfer',
+                        params: {
+                            amount,
+                            resource_address: token,
+                            destination_public_key: recipient,
+                            fee: 1,
+                        }
+                    }
+                },
+            });
+            console.log({ response });
             onSend(token, amount, recipient);
         } catch (e) {
             console.error(e);
@@ -135,7 +136,7 @@ export function SendDialog(props: SendDialogProps) {
                     </IconButton>
                 </Stack>
                 <Divider sx={{ mt: 3, mb: 3 }} variant="middle" />
-                <Box sx={{ padding: 1}}>
+                <Box sx={{ padding: 1 }}>
                     <Stack direction="row" justifyContent="space-between" spacing={2}>
                         <Typography style={{ fontSize: 14 }}>
                             Token
@@ -152,8 +153,8 @@ export function SendDialog(props: SendDialogProps) {
                             sx={{ width: '30%', borderRadius: 4, height: '47px' }}
                         >
                             {props.accountBalances.map((b) => (
-                                <MenuItem value={b.address}>
-                                    <ListItemText primary={b.name} />
+                                <MenuItem value={b.resource_address}>
+                                    <ListItemText primary={truncateText(b.resource_address, 15)} />
                                 </MenuItem>
                             ))}
                         </Select>
@@ -179,7 +180,7 @@ export function SendDialog(props: SendDialogProps) {
                     </TextField>
                 </Box>
                 <Stack direction="row" justifyContent="center" sx={{ mt: 4, width: '100%' }}>
-                    <ThemeFullWidthButton text="Send" onClick={async () => { await handleSendClick(); }}/>
+                    <ThemeFullWidthButton text="Send" onClick={async () => { await handleSendClick(); }} />
                 </Stack>
             </Box>
         </Dialog >

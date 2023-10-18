@@ -1,15 +1,18 @@
-export type SetWalletParams = {
-    tari_wallet_daemon_url: string;
+export type TransferRequest = {
+    amount: number,
+    resource_address: string,
+    destination_public_key: string,
+    fee: number,
 };
 
-export type TariPermission = Object;
-
-export type SendWalletRequestParams = {
-    token: string,
-    walletRequest: WalletRequest
+export type GetFreeTestCoinsRequest = {
+    amount: number,
+    fee: number,
 };
 
-export type WalletRequest = {
-    method: string,
-    params: Object
+export type SendTransactionRequest = {
+    instructions: Object[],
+    input_refs: Object[],
+    required_substates: Object[],
+    is_dry_run: boolean, 
 };

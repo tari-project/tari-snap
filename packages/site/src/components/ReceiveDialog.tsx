@@ -14,6 +14,7 @@ import IconButton from "@mui/material/IconButton";
 import Button from "@mui/material/Button";
 import { QRCodeSVG } from 'qrcode.react';
 import { ThemeFullWidthButton } from "./Buttons";
+import { copyToCliboard, truncateText } from "../utils/text";
 
 export interface SendDialogProps {
     address?: string,
@@ -28,22 +29,8 @@ export function ReceiveDialog(props: SendDialogProps) {
         onClose();
     };
 
-    const truncateText = (text: string, length: number) => {
-        if (!length || !text || text.length <= length) {
-            return text;
-        }
-        if (text.length <= length) {
-            return text;
-        }
-        const leftChars = Math.ceil(length/2);
-        const rightChars = Math.floor(length/2);
-        return text.substring(0, leftChars) + '...' + text.substring(text.length - rightChars);
-    }
-
     const handleCopyClick = async () => {
-        if(address) {
-            navigator.clipboard.writeText(address);
-        }
+        copyToCliboard(address);
     };
 
     return (

@@ -52,54 +52,42 @@ export const getSnap = async (version?: string): Promise<Snap | undefined> => {
   }
 };
 
-export const setTariWallet = async () => {
-  let tari_wallet_daemon_url = "http://127.0.0.1:9000";
-
-  // The "setWallet" snap method returns a wallet token to avoid repetitive user interactions
-  let token = await window.ethereum.request({
-    method: 'wallet_invokeSnap',
-    params: { snapId: defaultSnapOrigin, request: { method: 'setWallet', params: { tari_wallet_daemon_url } } },
-  });
-  return token;
-};
-
-export const getTariWalletToken = async () => {
+export const getAccountData = async () => {
   return window.ethereum.request({
     method: 'wallet_invokeSnap',
     params: {
       snapId: defaultSnapOrigin,
       request: {
-        method: 'getWalletToken',
+        method: 'getAccountData',
+        params: {}
+      }
+    },
+  });
+};
+
+export const getAccountTransactions = async () => {
+  return window.ethereum.request({
+    method: 'wallet_invokeSnap',
+    params: {
+      snapId: defaultSnapOrigin,
+      request: {
+        method: 'getTransactions',
+        params: {}
+      }
+    },
+  });
+};
+
+export const getFreeTestCoins = async (amount: number, fee: number) => {
+  return await window.ethereum.request({
+    method: 'wallet_invokeSnap',
+    params: {
+      snapId: defaultSnapOrigin,
+      request: {
+        method: 'getFreeTestCoins',
         params: {
-          // TODO: the "Admin" permission should never be used, find a workaround
-          permissions:['Admin', 'AccountInfo', 'KeyList', 'TransactionGet', {'TransactionSend': null}]
+          amount, fee
         }
-      }
-    },
-  });
-};
-
-export const getTariWalletPublicKey = async (token: string) => {
-  return window.ethereum.request({
-    method: 'wallet_invokeSnap',
-    params: {
-      snapId: defaultSnapOrigin,
-      request: {
-        method: 'getWalletPublicKey',
-        params: { token }
-      }
-    },
-  });
-};
-
-export const sendWalletRequest = async (token: string, walletRequest: Object) => {
-  return window.ethereum.request({
-    method: 'wallet_invokeSnap',
-    params: {
-      snapId: defaultSnapOrigin,
-      request: {
-        method: 'sendWalletRequest',
-        params: { token, walletRequest }
       }
     },
   });

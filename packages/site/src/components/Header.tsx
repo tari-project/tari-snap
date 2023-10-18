@@ -65,18 +65,6 @@ export const Header = ({
     }
   };
 
-  const handleSetTariWalletClick = async () => {
-    try {
-      let token = await setTariWallet();
-      tariDispatch({
-        type: TariActions.SetToken,
-        payload: token,
-      });
-    } catch (e) {
-      console.error(e);
-      metamaskDispatch({ type: MetamaskActions.SetError, payload: e });
-    }
-  };
 
   return (
     <HeaderWrapper>
@@ -88,8 +76,7 @@ export const Header = ({
         <HeaderButtons
           metamaskState={metamaskState}
           metamaskDispatch={(v) => metamaskDispatch(v)}
-          onConnectClick={handleMetamaskConnectClick}
-          onTariWalletClick={handleSetTariWalletClick}/>
+          onConnectClick={handleMetamaskConnectClick}/>
       </RightContainer>
     </HeaderWrapper>
   );

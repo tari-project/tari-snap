@@ -4,10 +4,7 @@ import { MetamaskActions, MetaMaskContext, TariActions, TariContext, AccountStat
 import {
     connectSnap,
     getSnap,
-    getTariWalletToken,
     isLocalSnap,
-    sendWalletRequest,
-    setTariWallet,
     shouldDisplayReconnectButton,
 } from '../utils';
 import {
@@ -37,68 +34,10 @@ function Index() {
 
     const [tab, setTab] = React.useState(0);
 
-    const getAccount = async () => {
-        try {
-            const walletRequest = {
-                method: 'accounts.get_default',
-                params: {}
-            };
-
-            const account = await sendWalletRequest(tari.token, walletRequest);
-            return account
-        } catch (e) {
-            console.error(e);
-            metamaskDispatch({ type: MetamaskActions.SetError, payload: e });
-            return null;
-        }
-    };
-
-    const refreshAccountData = async () => {
-        const accountData = await getAccount();
-        if (accountData) {
-            const payload: AccountState = {
-                name: accountData.account.name,
-                address: accountData.account.address.Component,
-                public_key: accountData.public_key,
-            };
-
-            tariDispatch({
-                type: TariActions.SetAccount,
-                payload,
-            });
-        }
-    }
-
-    useEffect(() => {
-        if (tari.token) {
-            refreshAccountData();
-        }
-    }, [tari.token]);
-
     interface TabPanelProps {
         children?: React.ReactNode;
         index: number;
         value: number;
-    }
-
-    function CustomTabPanel(props: TabPanelProps) {
-        const { children, value, index, ...other } = props;
-
-        return (
-            <div
-                role="tabpanel"
-                hidden={value !== index}
-                id={`simple-tabpanel-${index}`}
-                aria-labelledby={`simple-tab-${index}`}
-                {...other}
-            >
-                {value === index && (
-                    <Box sx={{ p: 3 }}>
-                        <Typography>{children}</Typography>
-                    </Box>
-                )}
-            </div>
-        );
     }
 
     const selectBalances = () => {
@@ -112,8 +51,8 @@ function Index() {
     return (
         <Box sx={{ mt: 4 }}>
             <Stack direction='row' alignItems="center" justifyContent="center">
-                <MenuItem sx={{ fontSize: 20, fontWeight: tab==0 ? 'bold' : 'default'}} onClick={selectBalances}>Balances</MenuItem>
-                <MenuItem sx={{ fontSize: 20, fontWeight: tab==1 ? 'bold' : 'default'}} onClick={selectTransactions}>Transactions</MenuItem>
+                <MenuItem sx={{ fontSize: 20, fontWeight: tab == 0 ? 'bold' : 'default' }} onClick={selectBalances}>Balances</MenuItem>
+                <MenuItem sx={{ fontSize: 20, fontWeight: tab == 1 ? 'bold' : 'default' }} onClick={selectTransactions}>Transactions</MenuItem>
             </Stack>
 
             {/* Balances */}

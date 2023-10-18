@@ -1,0 +1,15 @@
+{
+  "author": "You <you@example.com>",
+  "name": "tari_wallet_lib",
+  "version": "0.1.0",
+  "scripts": {
+    "build": "rimraf dist pkg && webpack",
+    "test": "cargo test && wasm-pack test --headless"
+  },
+  "devDependencies": {
+    "@wasm-tool/wasm-pack-plugin": "^1.7.0",
+    "rimraf": "^3.0.0",
+    "webpack": "^5.88.2",
+    "webpack-cli": "^5.1.4"
+  }
+}

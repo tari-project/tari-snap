@@ -4,6 +4,7 @@ import { MetamaskActions, MetamaskState } from '../hooks';
 import { ReactComponent as FlaskFox } from '../assets/flask_fox.svg';
 import { getTariWalletToken, setTariWallet, shouldDisplayReconnectButton } from '../utils';
 import Stack from '@mui/material/Stack';
+import { defaultSnapOrigin } from '../config';
 
 const Link = styled.a`
   display: flex;
@@ -116,7 +117,6 @@ export const HeaderButtons = ({
   metamaskState,
   metamaskDispatch,
   onConnectClick,
-  onTariWalletClick,
 }: {
   state: MetamaskState;
   onConnectClick(): unknown;
@@ -133,9 +133,6 @@ export const HeaderButtons = ({
     return (
       <Stack direction="row" spacing={2}>
         <ReconnectButton onClick={onConnectClick} />
-        <Button onClick={onTariWalletClick}>
-          Connect Tari Wallet
-        </Button>
       </Stack>
     );
   }
