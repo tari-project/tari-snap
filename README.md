@@ -1,28 +1,37 @@
 # tari-snap
 
-This repository is a proof of concept of a MetaMask snap that add support to Tari network by acting as proxy to a running Tari Wallet Daemon
+This repository contains:
+* A MetaMask snap that adds support to Tari network, allowing the user to send and retrieve transactions.
+* A web wallet as an UI to visualize and perform account management operations (see balances, transfer, etc.).
 
 ## Pre-requisites
 
 To interact with Snaps, you will need to install [MetaMask Flask](https://metamask.io/flask/), a canary distribution for developers that provides access to upcoming features.
 
-You will also need a Tari network running, with a wallet daemon (on `http://127.0.0.1:9000`) and an active account.
+You will also need a Tari network running, with an indexer. 
+
 
 ## Getting Started
 
+First clone the repo
 ```shell
 git clone https://github.com/mrnaveira/tari-snap
 cd tari-snap
-yarn install && yarn start
 ```
 
-The output of the yarn start command will direct you to open the URL `http://127.0.0.1:8000` for the test site.
+Then you need to build the WebAssembly library used to build Tari transactions:
+```shell
+cd tari_wallet_lib
+npm run build
+```
 
-In the test site you will need to click each button in order:
-* **Install**: requests MetaMask to install the tari-snap
-* **Set Tari wallet**: requests the snap to set up the proxy to the Tari wallet daemon at `http://127.0.0.1:9000`. In the future, this button could be located on the Tari wallet UI.
-* **Get Tari wallet token**: This is the first requests that each dapp would do to connect to the tari-snap and request a JWT from the wallet daemon. The JWT is necessary for future calls.
-* Now that we have the wallet JWT we can make any allowed request to the wallet daemon. This example includes **Get keys** (get all the wallet public keys) and **Send transaction** (sends a method call to an account to get the balance, you may need to edit the transaction parameters to adapt to your Tari network).
+The snap requires connection to a Tari indexer to access the Tari network, by default the snap uses the URL `http://127.0.0.1:18300`, but you can change it by editing the `.env.development` or `.env.production` files to point to your indexer.
 
-To inspect the results of the actions you will need to open the JavaScript console in your browser.
+Finally, from the root folder (`tari-snap`), build and launch the snap and wallet website:
+```shell
+yarn install
+yarn start
+```
+
+The output of the yarn start command will direct you to open the URL `http://127.0.0.1:8000` for the wallet website.
 
