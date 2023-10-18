@@ -21804,7 +21804,6 @@ __metadata:
     prettier: ^2.2.1
     prettier-plugin-packagejson: ^2.2.11
     rimraf: ^3.0.2
-    tari_wallet_lib: "workspace:*"
     through2: ^4.0.2
     ts-jest: ^29.1.0
     typescript: ^4.7.4
@@ -22756,12 +22755,6 @@ __metadata:
   checksum: db4d9fe74a2082c3a5016630092c54c8375ff3b280186938cfd104f2e089c4fd9bad58688ef6be9cf186a889671bf355c7cda38f09bbf60604b281715ca57f5c
   languageName: node
   linkType: hard
-
-"tari_wallet_lib@workspace:*, tari_wallet_lib@workspace:tari_wallet_lib/pkg":
-  version: 0.0.0-use.local
-  resolution: "tari_wallet_lib@workspace:tari_wallet_lib/pkg"
-  languageName: unknown
-  linkType: soft
 
 "term-size@npm:^2.1.0":
   version: 2.2.1
