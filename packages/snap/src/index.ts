@@ -112,15 +112,19 @@ async function transfer(request: JsonRpcRequest<Json[] | Record<string, Json>>) 
   const accountIndex = 0;
   const { secret_key, public_key } = await getRistrettoKeyPair(accountIndex);
 
-  // build and sign transaction using the wasm lib
-  const transaction = tari_wallet_lib.create_transfer_transaction(secret_key, destination_public_key, resource_address, BigInt(amount), BigInt(fee));
-  const account_component = tari_wallet_lib.get_account_component_address(public_key);
-  const dest_account_component = tari_wallet_lib.get_account_component_address(destination_public_key);
-
-  // send the transaction to the indexer
+  // check if the destination account exists
   const indexer_url = process.env.TARI_INDEXER_URL;
+  const dest_account_component = tari_wallet_lib.get_account_component_address(destination_public_key);
+  const dest_account_exists = await substateExists(indexer_url, dest_account_component);
+  const create_dest_account = !dest_account_exists;
+
+  // build and sign transaction using the wasm lib
+  const transaction = tari_wallet_lib.create_transfer_transaction(secret_key, destination_public_key, create_dest_account, resource_address, BigInt(amount), BigInt(fee));
+  const account_component = tari_wallet_lib.get_account_component_address(public_key);
+  
+  // send the transaction to the indexer
   const submit_method = 'submit_transaction';
-  const submit_params = {
+  let submit_params = {
     transaction,
     is_dry_run: false,
     required_substates: [
@@ -129,15 +133,20 @@ async function transfer(request: JsonRpcRequest<Json[] | Record<string, Json>>) 
         version: null
       },
       {
-        address: dest_account_component,
-        version: null
-      },
-      {
         address: resource_address,
         version: null
       }
     ],
   };
+  if (dest_account_exists) {
+    submit_params.required_substates.push(
+      {
+        address: dest_account_component,
+        version: null
+      }
+    );
+  }
+
   await sendIndexerRequest(indexer_url, submit_method, submit_params);
 
   // TODO: keep polling the indexer until we get a result for the transaction
@@ -187,7 +196,7 @@ async function getFreeTestCoins(request: JsonRpcRequest<Json[] | Record<string, 
   const { secret_key, public_key } = await getRistrettoKeyPair(accountIndex);
   const component_address = tari_wallet_lib.get_account_component_address(public_key);
 
-  const indexer_url = process.env.TARI_INDEXER_URL;
+  const indexer_url = process.env.GATSBY_INDEXER_URL;
 
   let accountExists = await substateExists(indexer_url, component_address);
   let is_new_account = !accountExists;

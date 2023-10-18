@@ -16,10 +16,12 @@ use shard_id::ShardId;
 use substate::SubstateAddress;
 use tari_crypto::keys::PublicKey;
 use tari_crypto::ristretto::{RistrettoPublicKey, RistrettoSecretKey};
-use tari_crypto::tari_utilities::ByteArray;
 use tari_crypto::tari_utilities::hex::Hex;
+use tari_crypto::tari_utilities::ByteArray;
 use tari_template_lib::args;
-use tari_template_lib::prelude::{Amount, ResourceAddress, NonFungibleAddress, RistrettoPublicKeyBytes, TemplateAddress};
+use tari_template_lib::prelude::{
+    Amount, NonFungibleAddress, ResourceAddress, RistrettoPublicKeyBytes, TemplateAddress,
+};
 use transaction::instruction::Instruction;
 use transaction::transaction::Transaction;
 use wasm_bindgen::prelude::*;
@@ -46,7 +48,8 @@ pub fn get_account_component_address(public_key: &str) -> Result<String, JsError
 #[wasm_bindgen]
 pub fn create_transfer_transaction(
     source_private_key: &str,
-    destination_public_key: &str,
+    destination_public_key_hex: &str,
+    create_destination_account: bool,
     resource_address: &str,
     amount: i64,
     fee: i64,
@@ -55,9 +58,10 @@ pub fn create_transfer_transaction(
     let source_public_key = RistrettoPublicKey::from_secret_key(&source_private_key);
     let source_account_address = get_account_address_from_public_key(&source_public_key.to_hex())?;
 
-    let destination_account_address = get_account_address_from_public_key(destination_public_key)?;
+    let destination_account_address = get_account_address_from_public_key(destination_public_key_hex)?;
+    let destination_public_key = RistrettoPublicKey::from_hex(destination_public_key_hex)?;
 
-    let instructions = [
+    let mut instructions = vec![
         Instruction::CallMethod {
             component_address: source_account_address,
             method: "withdraw".to_string(),
@@ -69,17 +73,30 @@ pub fn create_transfer_transaction(
         Instruction::PutLastInstructionOutputOnWorkspace {
             key: b"bucket".to_vec(),
         },
-        Instruction::CallMethod {
-            component_address: destination_account_address,
-            method: "deposit".to_string(),
-            args: args![Workspace("bucket")],
-        },
-        Instruction::CallMethod {
-            component_address: source_account_address,
-            method: "pay_fee".to_string(),
-            args: args![Amount::new(fee)],
-        },
     ];
+
+    if create_destination_account {
+        let owner_token = NonFungibleAddress::from_public_key(
+            RistrettoPublicKeyBytes::from_bytes(destination_public_key.as_bytes()).unwrap(),
+        );
+        let template_address: TemplateAddress = TemplateAddress::from_array([0; 32]);
+        instructions.push(Instruction::CallFunction {
+            template_address,
+            function: "create".to_string(),
+            args: args![owner_token],
+        });
+    }
+
+    instructions.push(Instruction::CallMethod {
+        component_address: destination_account_address,
+        method: "deposit".to_string(),
+        args: args![Workspace("bucket")],
+    });
+    instructions.push(Instruction::CallMethod {
+        component_address: source_account_address,
+        method: "pay_fee".to_string(),
+        args: args![Amount::new(fee)],
+    });
 
     let resource_address_obj = ResourceAddress::from_str(resource_address)?;
     let resource_substate = SubstateAddress::Resource(resource_address_obj);
@@ -104,7 +121,8 @@ pub fn create_free_test_coins_transaction(
 ) -> Result<JsValue, JsError> {
     let account_private_key = RistrettoSecretKey::from_hex(account_private_key)?;
     let account_public_key = RistrettoPublicKey::from_secret_key(&account_private_key);
-    let account_component_address = get_account_address_from_public_key(&account_public_key.to_hex())?;
+    let account_component_address =
+        get_account_address_from_public_key(&account_public_key.to_hex())?;
 
     let mut instructions = vec![
         Instruction::CreateFreeTestCoins {
@@ -113,7 +131,7 @@ pub fn create_free_test_coins_transaction(
         },
         Instruction::PutLastInstructionOutputOnWorkspace {
             key: b"free_test_coins".to_vec(),
-        }
+        },
     ];
 
     if is_new_account {
