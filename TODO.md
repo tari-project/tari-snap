@@ -27,5 +27,10 @@
     * Why if I use `from_hex` and then `to_hex` I get totally different values?
 * I am using `tari-crypto` version `0.17` because `0.18` gave me trouble when compiling to WASM (due to `getrandom` dependency)
 * Indexer performance could be greatly improved (specially in a testnet if we start having multiple users) by implementing caching of substates/transactions.
+* Support multiple accounts in the wallet (by changing the index of the private key: 0, 1, etc)
+* More sections in the wallet:
+    * Show NFTs, allow to mint and send them
+    * Swap fungible tokens, by integrating the tariswap project in the wallet
+    * Bridge from ethereum, by integrating the tari-atomic-swap project
 
 
