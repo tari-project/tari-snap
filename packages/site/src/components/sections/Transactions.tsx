@@ -39,7 +39,7 @@ function Transactions() {
 
             const raw_transactions = await getAccountTransactions();
             if (raw_transactions && raw_transactions.transaction_results) {
-                transactions = raw_transactions.transaction_results.map(process_raw_transaction);
+                transactions = raw_transactions.transaction_results.reverse().map(process_raw_transaction);
             }
 
             return transactions;
