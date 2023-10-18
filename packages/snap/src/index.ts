@@ -41,9 +41,7 @@ async function getAccountData(request: JsonRpcRequest<Json[] | Record<string, Js
   const { public_key } = await getRistrettoKeyPair(accountIndex);
 
   const component_address = tari_wallet_lib.get_account_component_address(public_key);
-
-  // TODO: parameterize the indexer url
-  const indexer_url = 'http://127.0.0.1:18300';
+  const indexer_url = process.env.GATSBY_INDEXER_URL;
 
   const method = 'inspect_substate';
   const params = {
@@ -120,8 +118,7 @@ async function transfer(request: JsonRpcRequest<Json[] | Record<string, Json>>) 
   const dest_account_component = tari_wallet_lib.get_account_component_address(destination_public_key);
 
   // send the transaction to the indexer
-  // TODO: parameterize the indexer url
-  const indexer_url = 'http://127.0.0.1:18300';
+  const indexer_url = process.env.GATSBY_INDEXER_URL;
   const submit_method = 'submit_transaction';
   const submit_params = {
     transaction,
@@ -167,9 +164,7 @@ async function getTransactions(request: JsonRpcRequest<Json[] | Record<string, J
   const { public_key } = await getRistrettoKeyPair(accountIndex);
   const component_address = tari_wallet_lib.get_account_component_address(public_key);
 
-  // TODO: parameterize the indexer url
-  const indexer_url = 'http://127.0.0.1:18300';
-
+  const indexer_url = process.env.GATSBY_INDEXER_URL;
   const method = 'get_substate_transactions';
   const params = {
     address: component_address,
@@ -205,8 +200,7 @@ async function getFreeTestCoins(request: JsonRpcRequest<Json[] | Record<string, 
   const { secret_key, public_key } = await getRistrettoKeyPair(accountIndex);
   const component_address = tari_wallet_lib.get_account_component_address(public_key);
 
-  // TODO: parameterize the indexer url
-  const indexer_url = 'http://127.0.0.1:18300';
+  const indexer_url = process.env.GATSBY_INDEXER_URL;
 
   let accountExists = await substateExists(indexer_url, component_address);
   let is_new_account = !accountExists;

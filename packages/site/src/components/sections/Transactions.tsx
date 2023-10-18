@@ -3,7 +3,6 @@ import { MetamaskActions, MetaMaskContext, TariActions, TariContext } from '../.
 
 import {
     getAccountTransactions,
-    sendWalletRequest,
 } from '../../utils';
 import Container from '@mui/material/Container';
 import Typography from '@mui/material/Typography';

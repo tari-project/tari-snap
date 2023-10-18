@@ -11,7 +11,6 @@ import React, { useContext, useEffect } from "react";
 import CloseIcon from '@mui/icons-material/Close';
 import IconButton from "@mui/material/IconButton";
 import { MetaMaskContext, MetamaskActions, TariContext } from "../hooks";
-import { resource_address_to_int_array, sendWalletRequest } from "../utils/snap";
 import { ThemeFullWidthButton } from "./Buttons";
 import { truncateText } from "../utils/text";
 import { defaultSnapOrigin } from "../config/snap";

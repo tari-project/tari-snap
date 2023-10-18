@@ -17,8 +17,7 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import IconButton from '@mui/material/IconButton';
 import Box from '@mui/material/Box';
 import { ThemeButton } from '../Buttons';
-import { getAccountData, getFreeTestCoins, sendWalletRequest } from '../../utils/snap';
-import { defaultSnapOrigin } from '../../config/snap';
+import { getAccountData, getFreeTestCoins } from '../../utils/snap';
 
 function Balances() {
     const [metamaskState, metamaskDispatch] = useContext(MetaMaskContext);

@@ -4,10 +4,7 @@ import { MetamaskActions, MetaMaskContext, TariActions, TariContext, AccountStat
 import {
     connectSnap,
     getSnap,
-    getTariWalletToken,
     isLocalSnap,
-    sendWalletRequest,
-    setTariWallet,
     shouldDisplayReconnectButton,
 } from '../utils';
 import {
