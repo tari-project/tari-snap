@@ -25,7 +25,7 @@ cd tari_wallet_lib
 npm run build
 ```
 
-The snap requires connection to a Tari indexer to access the Tari network, by default the snap uses the URL `http://127.0.0.1:18300`, but you can change it by editing the `.env.development` or `.env.production` files to point to your indexer.
+The snap requires connection to a Tari indexer to access the Tari network. The URL value is configured in the `tari-snap/snap/.env` file, which you need to create by making a copy of the `tari-snap/snap/.env.example` file.
 
 Finally, from the root folder (`tari-snap`), build and launch the snap and wallet website:
 ```shell

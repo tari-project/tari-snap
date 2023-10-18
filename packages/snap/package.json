@@ -31,6 +31,8 @@
     "@metamask/snaps-types": "^0.32.2",
     "@metamask/snaps-ui": "^0.32.2",
     "buffer": "^6.0.3",
+    "dotenv": "^16.1.4",
+    "envify": "^4.1.0",
     "tari_wallet_lib": "workspace:*"
   },
   "devDependencies": {

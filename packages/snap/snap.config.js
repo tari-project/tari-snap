@@ -1,5 +1,7 @@
 // eslint-disable-next-line node/global-require
 const through = require('through2');
+const envify = require('envify/custom');
+require('dotenv').config();
 
 module.exports = {
   cliOptions: {
@@ -23,5 +25,10 @@ module.exports = {
         },
       );
     });
+    bundler.transform(
+      envify({
+        TARI_INDEXER_URL: process.env.TARI_INDEXER_URL,
+      }),
+    );
   },
 };
