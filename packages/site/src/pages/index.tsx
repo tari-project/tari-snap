@@ -34,69 +34,10 @@ function Index() {
 
     const [tab, setTab] = React.useState(0);
 
-    const getAccount = async () => {
-        try {
-            const response = await window.ethereum.request({
-                method: 'wallet_invokeSnap',
-                params: {
-                    snapId: defaultSnapOrigin,
-                    request: {
-                        method: 'getAccountData',
-                        params: {}
-                    }
-                },
-            });
-            return response;
-        } catch (e) {
-            console.error(e);
-            metamaskDispatch({ type: MetamaskActions.SetError, payload: e });
-            return null;
-        }
-    };
-
-    const refreshAccountData = async () => {
-        const accountData = await getAccount();
-        if (accountData) {
-            const payload: AccountState = {
-                address: accountData.component_address,
-                public_key: accountData.public_key,
-            };
-
-            tariDispatch({
-                type: TariActions.SetAccount,
-                payload,
-            });
-        }
-    }
-
-    useEffect(() => {
-        refreshAccountData();
-    }, []);
-
     interface TabPanelProps {
         children?: React.ReactNode;
         index: number;
         value: number;
-    }
-
-    function CustomTabPanel(props: TabPanelProps) {
-        const { children, value, index, ...other } = props;
-
-        return (
-            <div
-                role="tabpanel"
-                hidden={value !== index}
-                id={`simple-tabpanel-${index}`}
-                aria-labelledby={`simple-tab-${index}`}
-                {...other}
-            >
-                {value === index && (
-                    <Box sx={{ p: 3 }}>
-                        <Typography>{children}</Typography>
-                    </Box>
-                )}
-            </div>
-        );
     }
 
     const selectBalances = () => {

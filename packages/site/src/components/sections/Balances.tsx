@@ -1,5 +1,5 @@
 import { useContext, useEffect } from 'react';
-import { MetamaskActions, MetaMaskContext, TariActions, TariContext } from '../../hooks';
+import { AccountState, MetamaskActions, MetaMaskContext, TariActions, TariContext } from '../../hooks';
 import { SendDialog } from '../../components/SendDialog';
 import { ReceiveDialog } from '../../components/ReceiveDialog';
 
@@ -29,6 +29,19 @@ function Balances() {
     const getBalances = async () => {
         try {
             const data = await getAccountData();
+
+            if (data && data.public_key) {
+                const payload: AccountState = {
+                    address: data.component_address,
+                    public_key: data.public_key,
+                };
+    
+                tariDispatch({
+                    type: TariActions.SetAccount,
+                    payload,
+                });
+            }
+
             if (!data || !data.balances) {
                 return [];  
             }
@@ -43,7 +56,7 @@ function Balances() {
 
     const refreshAccountBalances = async () => {
         const balances = await getBalances();
-        if (balances.length > 0) {
+        if (balances && balances.length > 0) {
             tariDispatch({
                 type: TariActions.SetBalances,
                 payload: balances,
@@ -56,7 +69,7 @@ function Balances() {
 
     useEffect(() => {
         refreshAccountBalances();
-    }, [tari.account]);
+    }, []);
 
     const handleCopyClick = async (text: string | undefined) => {
         navigator.clipboard.writeText(text || '');
