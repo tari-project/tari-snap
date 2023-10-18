@@ -142,21 +142,8 @@ async function transfer(request: JsonRpcRequest<Json[] | Record<string, Json>>) 
 
   // TODO: keep polling the indexer until we get a result for the transaction
   const transaction_id = transaction.id;
-  const get_method = 'get_transaction_result';
-  const get_params = { transaction_id };
-  const result = await sendIndexerRequest(indexer_url, get_method, get_params);
 
-  // TODO: notify errors
-  const message = 'Transaction "' + truncateText(transaction_id, 10) + '" confirmed';
-  await snap.request({
-    method: 'snap_notify',
-    params: {
-      type: 'inApp',
-      message,
-    },
-  });
-
-  return { transaction_id, result };
+  return { transaction_id };
 }
 
 async function getTransactions(request: JsonRpcRequest<Json[] | Record<string, Json>>) {
