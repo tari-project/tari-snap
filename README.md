@@ -4,6 +4,8 @@ This repository contains:
 * A MetaMask snap that adds support to Tari network, allowing the user to send and retrieve transactions.
 * A web wallet as an UI to visualize and perform account management operations (see balances, transfer, etc.).
 
+Please read the [TODO](TODO.md) file for upcoming features.
+
 ## Pre-requisites
 
 To interact with Snaps, you will need to install [MetaMask Flask](https://metamask.io/flask/), a canary distribution for developers that provides access to upcoming features.
