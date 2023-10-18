@@ -9,3 +9,10 @@ export type GetFreeTestCoinsRequest = {
     amount: number,
     fee: number,
 };
+
+export type SendTransactionRequest = {
+    instructions: Object[],
+    input_refs: Object[],
+    required_substates: Object[],
+    is_dry_run: boolean, 
+};

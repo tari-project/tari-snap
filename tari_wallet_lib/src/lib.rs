@@ -46,6 +46,25 @@ pub fn get_account_component_address(public_key: &str) -> Result<String, JsError
 }
 
 #[wasm_bindgen]
+pub fn create_transaction(
+    account_private_key_hex: &str,
+    instructions_js: JsValue,
+    input_refs_js: JsValue,
+) -> Result<JsValue, JsError> {
+    let account_private_key = RistrettoSecretKey::from_hex(account_private_key_hex)?;
+    let instructions: Vec<Instruction> = serde_wasm_bindgen::from_value(instructions_js)?;
+    let input_refs: Vec<ShardId> = serde_wasm_bindgen::from_value(input_refs_js)?;
+
+    let transaction = Transaction::builder()
+        .with_fee_instructions(instructions.to_vec())
+        .with_input_refs(input_refs.to_vec())
+        .sign(&account_private_key)
+        .build();
+
+    Ok(serde_wasm_bindgen::to_value(&transaction)?)
+}
+
+#[wasm_bindgen]
 pub fn create_transfer_transaction(
     source_private_key: &str,
     destination_public_key_hex: &str,
