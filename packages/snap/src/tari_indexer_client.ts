@@ -26,27 +26,7 @@ async function rawIndexerCall(tari_indexer_url: string, method: string, params: 
 }
 
 export async function sendIndexerRequest(tari_indexer_url: string, method: string, params: Object) {
-    let headers: HeadersInit = {
-        'content-type': 'application/json',
-        accept: 'application/json',
-    };
-
-    const body = {
-        jsonrpc: '2.0',
-        method,
-        params,
-        id: 1
-    };
-
-    const requestParams: RequestInit = {
-        headers,
-        method: 'POST',
-        body: JSON.stringify(body),
-    };
-
-    // TODO: handle/display/log errors
-    const response = await fetch(tari_indexer_url, requestParams);
-    const { result } = await response.json();
+    const { result } = await rawIndexerCall(tari_indexer_url, method, params);
     return result;
 }
 
