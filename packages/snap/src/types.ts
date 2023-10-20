@@ -16,3 +16,12 @@ export type SendTransactionRequest = {
     required_substates: Object[],
     is_dry_run: boolean, 
 };
+
+export type SendInstructionRequest = {
+    instructions: Object[],
+    input_refs: Object[],
+    required_substates: Object[],
+    is_dry_run: boolean,
+    fee: number,
+    dump_account: string,
+};
