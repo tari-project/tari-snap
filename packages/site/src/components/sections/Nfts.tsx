@@ -1,4 +1,4 @@
-import { useContext } from 'react';
+import { useContext, useEffect } from 'react';
 import { MetaMaskContext, MetamaskActions, TariContext } from '../../hooks';
 import Container from '@mui/material/Container';
 import Typography from '@mui/material/Typography';
@@ -12,13 +12,52 @@ import { ReceiveDialog } from '../ReceiveDialog';
 import IconButton from '@mui/material/IconButton';
 import { copyToCliboard } from '../../utils/text';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import { getAccountData } from '../../utils/snap';
 
 function Nfts() {
     const [metamaskState, metamaskDispatch] = useContext(MetaMaskContext);
     const [tari, tariDispatch] = useContext(TariContext);
 
-    const [sendDialogOpen, setSendDialogOpen] = React.useState(false);
-    const [receiveDialogOpen, setReceiveDialogOpen] = React.useState(false);
+    const [receiveDialogOpen, setReceiveDialogOpen] = React.useState(false); 
+    const [nfts, setNfts] = React.useState([]); 
+
+    const getNfts = async () => {
+        try {
+            const data = await getAccountData();
+
+            if (!tari || !data || !data.resources) {
+                return [];
+            }
+
+            let nft_addresses = data.resources
+                .filter(res => res.type === 'nonfungible')
+                .map(res => {
+                    const collection = res.resource_address;
+                    const items = res.token_ids.map(id => `${collection} ${id}`);
+                    return items;
+                })
+                .flat();
+
+            return nft_addresses;
+        } catch (e) {
+            console.error(e);
+            metamaskDispatch({ type: MetamaskActions.SetError, payload: e });
+            return [];
+        }
+    };
+
+    const refreshNfts = async () => {
+        const currentNfts = await getNfts();
+        setNfts(currentNfts);
+        console.log({currentNfts});
+
+        // we keep polling for nfts to keep them updated
+        setTimeout(async () => { await refreshNfts() }, 10000);
+    }
+
+    useEffect(() => {
+        refreshNfts();
+    }, []);
 
     const handleMint = async () => {
         try {
@@ -45,14 +84,6 @@ function Nfts() {
             metamaskDispatch({ type: MetamaskActions.SetError, payload: e });
         }
     }
-
-    const handleSendOpen = () => {
-        setSendDialogOpen(true);
-    };
-
-    const handleSendClose = () => {
-        setSendDialogOpen(false);
-    };
 
     const handleReceiveOpen = () => {
         setReceiveDialogOpen(true);

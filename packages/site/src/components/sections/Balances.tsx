@@ -46,8 +46,6 @@ function Balances() {
                 return [];  
             }
 
-            console.log({resources: data.resources});
-
             let fungibles = data.resources
                 .filter(r => r.type === 'fungible' || r.type === 'confidential');
 
