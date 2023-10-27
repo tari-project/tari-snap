@@ -93,6 +93,21 @@ export const getFreeTestCoins = async (amount: number, fee: number) => {
   });
 };
 
+export const getSubstate = async (substate_address: string) => {
+  return window.ethereum.request({
+    method: 'wallet_invokeSnap',
+    params: {
+      snapId: defaultSnapOrigin,
+      request: {
+        method: 'getSubstate',
+        params: {
+          substate_address
+        }
+      }
+    },
+  });
+};
+
 export const isLocalSnap = (snapId: string) => snapId.startsWith('local:');
 
 

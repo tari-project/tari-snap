@@ -1,9 +1,9 @@
 import { Json, JsonRpcRequest, OnRpcRequestHandler } from '@metamask/snaps-types';
 import { heading, panel, text } from '@metamask/snaps-ui';
 import * as tari_wallet_lib from './tari_wallet_lib';
-import { decode_resource_address, decode_vault_id, int_array_to_hex, sendIndexerRequest, substateExists } from './tari_indexer_client';
+import { decode_resource_address, decode_vault_id, getSubstate, int_array_to_hex, sendIndexerRequest, substateExists } from './tari_indexer_client';
 import { getRistrettoKeyPair } from './keys';
-import { GetFreeTestCoinsRequest, TransferRequest } from './types';
+import { GetFreeTestCoinsRequest, GetSubstateRequest, TransferRequest } from './types';
 import { sendInstruction, sendTransaction } from './transactions';
 import { mintAccountNft } from './nfts';
 
@@ -246,6 +246,15 @@ async function getFreeTestCoins(request: JsonRpcRequest<Json[] | Record<string, 
   return { transaction_id };
 }
 
+async function getSubstateHandler(request: JsonRpcRequest<Json[] | Record<string, Json>>) {
+  const params = request.params as GetSubstateRequest;
+  const { substate_address } = params;
+
+  const indexer_url = process.env.TARI_INDEXER_URL;
+
+  return await getSubstate(indexer_url, substate_address);
+}
+
 /**
  * Handle incoming JSON-RPC requests, sent through `wallet_invokeSnap`.
  *
@@ -276,6 +285,8 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request }) => 
       return sendInstruction(wasm, request);
     case 'mintAccountNft':
       return mintAccountNft(wasm, request);
+    case 'getSubstate':
+      return getSubstateHandler(request);
     default:
       throw new Error('Method not found.');
   }

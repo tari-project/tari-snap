@@ -30,13 +30,18 @@ export async function sendIndexerRequest(tari_indexer_url: string, method: strin
     return result;
 }
 
-export async function substateExists(tari_indexer_url: string, substate_address: string) {
-    const method = 'get_substate';
+export async function getSubstate(tari_indexer_url: string, substate_address: string) {
+    const method = 'inspect_substate';
     const params = {
         address: substate_address,
         version: null
     };
     const result = await rawIndexerCall(tari_indexer_url, method, params);
+    return result;
+}
+
+export async function substateExists(tari_indexer_url: string, substate_address: string) {
+    const result = await getSubstate(tari_indexer_url, substate_address);
 
     if (result && !result.error) {
         return true;

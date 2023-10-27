@@ -12,7 +12,7 @@ import { ReceiveDialog } from '../ReceiveDialog';
 import IconButton from '@mui/material/IconButton';
 import { copyToCliboard } from '../../utils/text';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import { getAccountData } from '../../utils/snap';
+import { getAccountData, getSubstate } from '../../utils/snap';
 
 function Nfts() {
     const [metamaskState, metamaskDispatch] = useContext(MetaMaskContext);
@@ -33,12 +33,23 @@ function Nfts() {
                 .filter(res => res.type === 'nonfungible')
                 .map(res => {
                     const collection = res.resource_address;
-                    const items = res.token_ids.map(id => `${collection} ${id}`);
+                    const items = res.token_ids.map(id => `${collection} nft_${id}`);
                     return items;
                 })
                 .flat();
 
-            return nft_addresses;
+            const nft_contents = await Promise.all(nft_addresses.map(async (addr: any) => {
+                return await getSubstate(addr);
+            }));
+
+            const substates = nft_contents
+                .filter(content => content.result)
+                .map(content => {
+                    // metadata of the nft
+                    return content.result.substate_contents.substate.NonFungible.data['@@TAGGED@@'][1];
+                });
+
+            return substates;
         } catch (e) {
             console.error(e);
             metamaskDispatch({ type: MetamaskActions.SetError, payload: e });
