@@ -1,7 +1,7 @@
 import { Json, JsonRpcRequest, OnRpcRequestHandler } from '@metamask/snaps-types';
 import { heading, panel, text } from '@metamask/snaps-ui';
 import * as tari_wallet_lib from './tari_wallet_lib';
-import { decode_resource_address, decode_vault_id, sendIndexerRequest, substateExists } from './tari_indexer_client';
+import { decode_resource_address, decode_vault_id, int_array_to_hex, sendIndexerRequest, substateExists } from './tari_indexer_client';
 import { getRistrettoKeyPair } from './keys';
 import { GetFreeTestCoinsRequest, TransferRequest } from './types';
 import { sendInstruction, sendTransaction } from './transactions';
@@ -79,7 +79,21 @@ async function getAccountData(request: JsonRpcRequest<Json[] | Record<string, Js
     } else if (container.NonFungible) {
       const data = container.NonFungible;
       const resource_address = decode_resource_address(data.address);
-      const token_ids = data.token_ids;
+      const token_ids = data.token_ids.map(id => {
+        if (id.U256) {
+          const hex = int_array_to_hex(id.U256);
+          return `uuid:${hex}`;
+        } else if (id.String) {
+          return `str:${id.String}`;
+        } else if (id.Uint32) {
+          return `u32:${id.Uint32}`;
+        } else if (id.Uint64) {
+          return `u64:${id.Uint64}`;
+        } else {
+          // TODO: handle errors
+          return null;
+        }
+      });
       return { type: 'nonfungible', resource_address, token_ids };
     } else {
       // TODO: handle errors
