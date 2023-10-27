@@ -13,13 +13,17 @@ import IconButton from '@mui/material/IconButton';
 import { copyToCliboard } from '../../utils/text';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { getAccountData, getSubstate } from '../../utils/snap';
+import Grid from '@mui/material/Grid';
+import ImageList from '@mui/material/ImageList';
+import ImageListItem from '@mui/material/ImageListItem';
+import ImageListItemBar from '@mui/material/ImageListItemBar';
 
 function Nfts() {
     const [metamaskState, metamaskDispatch] = useContext(MetaMaskContext);
     const [tari, tariDispatch] = useContext(TariContext);
 
-    const [receiveDialogOpen, setReceiveDialogOpen] = React.useState(false); 
-    const [nfts, setNfts] = React.useState([]); 
+    const [receiveDialogOpen, setReceiveDialogOpen] = React.useState(false);
+    const [nfts, setNfts] = React.useState([]);
 
     const getNfts = async () => {
         try {
@@ -60,7 +64,7 @@ function Nfts() {
     const refreshNfts = async () => {
         const currentNfts = await getNfts();
         setNfts(currentNfts);
-        console.log({currentNfts});
+        console.log({ currentNfts });
 
         // we keep polling for nfts to keep them updated
         setTimeout(async () => { await refreshNfts() }, 10000);
@@ -110,10 +114,10 @@ function Nfts() {
 
     return (
         <Container>
-        {tari.account?.public_key ?
-            (<Container>
-                <Paper variant="outlined" elevation={0} sx={{ mt: 4, padding: 2, paddingLeft: 4, paddingRight: 4, borderRadius: 4 }}>
-                    <Stack direction="row" justifyContent="space-between" spacing={2}>
+            {tari.account?.public_key ?
+                (<Container>
+                    <Paper variant="outlined" elevation={0} sx={{ mt: 4, padding: 2, paddingLeft: 4, paddingRight: 4, borderRadius: 4 }}>
+                        <Stack direction="row" justifyContent="space-between" spacing={2}>
                             <Box>
                                 <Typography style={{ fontSize: 12 }} >
                                     Account address
@@ -127,24 +131,48 @@ function Nfts() {
                                     </IconButton>
                                 </Stack>
                             </Box>
-                        <Stack direction="row" spacing={2}>
-                            <ThemeButton text="Mint" onClick={async () => { await handleMint(); }}/>
-                            <ThemeButton text="Receive" onClick={handleReceiveOpen}/>
+                            <Stack direction="row" spacing={2}>
+                                <ThemeButton text="Mint" onClick={async () => { await handleMint(); }} />
+                                <ThemeButton text="Receive" onClick={handleReceiveOpen} />
+                            </Stack>
                         </Stack>
-                    </Stack>
-    
-                </Paper>
-                <Paper variant="outlined" elevation={0} sx={{ mt: 4, padding: 2, paddingLeft: 4, paddingRight: 4, borderRadius: 4 }}>
-                    No NFTs owned
-                </Paper>
-                <ReceiveDialog
+
+                    </Paper>
+                    <Paper variant="outlined" elevation={0} sx={{ mt: 4, padding: 2, paddingLeft: 4, paddingRight: 4, borderRadius: 4 }}>
+                        <Stack direction="column" justifyContent="flex-start" spacing={2}>
+                            <Typography style={{ fontSize: 24 }} >
+                                Owned NFTs
+                            </Typography>
+                        </Stack>
+                        <Grid container spacing={5}>
+                            <Grid item xs={12}>
+                                <ImageList cols={4} gap={8}>
+                                    {nfts.map((nft) => (
+                                        <ImageListItem>
+                                            <img
+                                                src={`${nft.image_url}?size=248&fit=fill&auto=format`}
+                                                srcSet={`${nft.image_url}?size=248&fit=fill&auto=format&dpr=2 4x`}
+                                                alt={nft.name}
+                                                loading="lazy"
+                                            />
+                                            <ImageListItemBar
+                                                title={nft.name}
+                                                position="below"
+                                            />
+                                        </ImageListItem>
+                                    ))}
+                                </ImageList>
+                            </Grid>
+                        </Grid>
+                    </Paper>
+                    <ReceiveDialog
                         address={tari.account?.public_key}
                         open={receiveDialogOpen}
                         onClose={handleReceiveClose}
                     />
-            </Container>) 
-            : (<div/>) }
-    </Container>
+                </Container>)
+                : (<div />)}
+        </Container>
     );
 }
 
