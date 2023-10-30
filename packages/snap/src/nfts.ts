@@ -26,14 +26,20 @@ export async function mintAccountNft(wasm: tari_wallet_lib.InitOutput, request: 
   const indexer_url = process.env.TARI_INDEXER_URL;
   let account_nft_exists = await substateExists(indexer_url, nft_component_address);
   if (!account_nft_exists) {
-      const owner_token = await tari_wallet_lib.get_owner_token(public_key);
-      instructions.push({
-        CallFunction: {
-          template_address: ACCOUNT_NFT_TEMPLATE,
-          function: "create",
-          args: [{ "Literal": owner_token }]
-        }
-      });
+    const owner_token = await tari_wallet_lib.get_owner_token(public_key);
+    instructions.push({
+      CallFunction: {
+        template_address: ACCOUNT_NFT_TEMPLATE,
+        function: "create",
+        args: [{ "Literal": owner_token }]
+      }
+    });
+  }
+
+  // include the input substates of the transaction (account and nft component)
+  let required_substates = [{ address: account_component_address, version: null }];
+  if (account_nft_exists) {
+    required_substates.push({ address: nft_component_address, version: null });
   }
 
   // build and send the mint transaction
@@ -50,7 +56,7 @@ export async function mintAccountNft(wasm: tari_wallet_lib.InitOutput, request: 
       }
     ],
     input_refs: [],
-    required_substates: [ { address: account_component_address, version: null}],
+    required_substates,
     is_dry_run: false,
     fee,
     dump_account: account_component_address,
