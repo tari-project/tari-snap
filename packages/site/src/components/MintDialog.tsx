@@ -1,20 +1,12 @@
 import Box from "@mui/material/Box";
 import Dialog from "@mui/material/Dialog";
-import DialogTitle from "@mui/material/DialogTitle";
-import Divider from "@mui/material/Divider";
-import ListItemText from "@mui/material/ListItemText";
-import MenuItem from "@mui/material/MenuItem";
-import Select from "@mui/material/Select";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import React, { useEffect } from "react";
 import CloseIcon from '@mui/icons-material/Close';
 import IconButton from "@mui/material/IconButton";
-import Button from "@mui/material/Button";
-import { QRCodeSVG } from 'qrcode.react';
 import { ThemeFullWidthButton } from "./Buttons";
-import { copyToCliboard, truncateText } from "../utils/text";
 import { MetamaskActions } from "../hooks";
 import { defaultSnapOrigin } from "../config/snap";
 
@@ -89,7 +81,6 @@ export function MintDialog(props: MintDialogProps) {
                 <Box sx={{ textAlign: 'center'}}>
                     <img style={{maxWidth: '50%', maxHeight: '50%'}} src={url}/>
                 </Box>         
-                <Divider sx={{ mt: 3, mb: 3 }} variant="middle" />
                 <Typography sx={{ mt: 4 }} style={{ fontSize: 14 }}>
                     Image URL
                 </Typography>

@@ -1,4 +1,5 @@
 # TODO
+* Transaction IDs returned by the submit_transaction or sumbit_instruction methods do not match with the network. Hash calculation may be wrong.
 * Wait for transaction results and notify the user. We may need to use a snap cronjob to keep polling for pending transactions. Show both successful and rejected transactions.
 * Transfer dialog fixes:
     * Refresh max balance when the account balance changes
