@@ -78,6 +78,9 @@ export function MintDialog(props: MintDialogProps) {
                         <CloseIcon style={{ fontSize: 24 }} />
                     </IconButton>
                 </Stack>
+                <Box sx={{ textAlign: 'center'}}>
+                    <img style={{maxWidth: '50%', maxHeight: '50%'}} src={url}/>
+                </Box>         
                 <Divider sx={{ mt: 3, mb: 3 }} variant="middle" />
                 <Typography sx={{ mt: 4 }} style={{ fontSize: 14 }}>
                     Image URL
