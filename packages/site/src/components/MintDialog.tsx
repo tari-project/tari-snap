@@ -29,6 +29,14 @@ export function MintDialog(props: MintDialogProps) {
     const [url, setUrl] = React.useState('');
     const [name, setName] = React.useState('');
 
+    // clear dialog form each time it closes
+    useEffect(() => {
+        if (!open) {
+            setUrl('');
+            setName('');
+        }
+    }, [open]);
+
     const handleClose = () => {
         onClose();
     };
