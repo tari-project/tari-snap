@@ -17,11 +17,13 @@ import Grid from '@mui/material/Grid';
 import ImageList from '@mui/material/ImageList';
 import ImageListItem from '@mui/material/ImageListItem';
 import ImageListItemBar from '@mui/material/ImageListItemBar';
+import { MintDialog } from '../MintDialog';
 
 function Nfts() {
     const [metamaskState, metamaskDispatch] = useContext(MetaMaskContext);
     const [tari, tariDispatch] = useContext(TariContext);
 
+    const [mintDialogOpen, setMintDialogOpen] = React.useState(false);
     const [receiveDialogOpen, setReceiveDialogOpen] = React.useState(false);
     const [nfts, setNfts] = React.useState([]);
 
@@ -64,7 +66,6 @@ function Nfts() {
     const refreshNfts = async () => {
         const currentNfts = await getNfts();
         setNfts(currentNfts);
-        console.log({ currentNfts });
 
         // we keep polling for nfts to keep them updated
         setTimeout(async () => { await refreshNfts() }, 10000);
@@ -74,31 +75,13 @@ function Nfts() {
         refreshNfts();
     }, []);
 
-    const handleMint = async () => {
-        try {
-            const metadata = [
-                { key: 'name', value: 'Test NFT' },
-                { key: 'image_url', value: 'https://img.freepik.com/free-vector/hand-drawn-nft-style-ape-illustration_23-2149622024.jpg' },
-            ];
-            const response = await window.ethereum.request({
-                method: 'wallet_invokeSnap',
-                params: {
-                    snapId: defaultSnapOrigin,
-                    request: {
-                        method: 'mintAccountNft',
-                        params: {
-                            metadata,
-                            fee: 1,
-                        }
-                    }
-                },
-            });
-            console.log({ response });
-        } catch (e) {
-            console.error(e);
-            metamaskDispatch({ type: MetamaskActions.SetError, payload: e });
-        }
-    }
+    const handleMintOpen = () => {
+        setMintDialogOpen(true);
+    };
+
+    const handleMintClose = () => {
+        setMintDialogOpen(false);
+    };
 
     const handleReceiveOpen = () => {
         setReceiveDialogOpen(true);
@@ -132,7 +115,7 @@ function Nfts() {
                                 </Stack>
                             </Box>
                             <Stack direction="row" spacing={2}>
-                                <ThemeButton text="Mint" onClick={async () => { await handleMint(); }} />
+                                <ThemeButton text="Mint" onClick={handleMintOpen} />
                                 <ThemeButton text="Receive" onClick={handleReceiveOpen} />
                             </Stack>
                         </Stack>
@@ -165,6 +148,10 @@ function Nfts() {
                             </Grid>
                         </Grid>
                     </Paper>
+                    <MintDialog
+                        open={mintDialogOpen}
+                        onClose={handleMintClose}
+                    />
                     <ReceiveDialog
                         address={tari.account?.public_key}
                         open={receiveDialogOpen}

@@ -1,0 +1,113 @@
+import Box from "@mui/material/Box";
+import Dialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import Divider from "@mui/material/Divider";
+import ListItemText from "@mui/material/ListItemText";
+import MenuItem from "@mui/material/MenuItem";
+import Select from "@mui/material/Select";
+import Stack from "@mui/material/Stack";
+import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
+import React, { useEffect } from "react";
+import CloseIcon from '@mui/icons-material/Close';
+import IconButton from "@mui/material/IconButton";
+import Button from "@mui/material/Button";
+import { QRCodeSVG } from 'qrcode.react';
+import { ThemeFullWidthButton } from "./Buttons";
+import { copyToCliboard, truncateText } from "../utils/text";
+import { MetamaskActions } from "../hooks";
+import { defaultSnapOrigin } from "../config/snap";
+
+export interface MintDialogProps {
+    open: boolean;
+    onClose: () => void;
+}
+
+export function MintDialog(props: MintDialogProps) {
+    const { onClose, open } = props;
+
+    const [url, setUrl] = React.useState('');
+    const [name, setName] = React.useState('');
+
+    const handleClose = () => {
+        onClose();
+    };
+
+    const handleUrlChange = async (event) => {
+        setUrl(event.target.value);
+    };
+
+    const handleNameChange = async (event) => {
+        setName(event.target.value);
+    };
+
+    const handleMintClick = async () => {
+        try {
+            const metadata = [
+                { key: 'name', value: name },
+                { key: 'image_url', value: url },
+            ];
+            const response = await window.ethereum.request({
+                method: 'wallet_invokeSnap',
+                params: {
+                    snapId: defaultSnapOrigin,
+                    request: {
+                        method: 'mintAccountNft',
+                        params: {
+                            metadata,
+                            fee: 1,
+                        }
+                    }
+                },
+            });
+            console.log({ response });
+        } catch (e) {
+            console.error(e);
+            metamaskDispatch({ type: MetamaskActions.SetError, payload: e });
+        }
+
+        handleClose();
+    };
+
+    return (
+        <Dialog fullWidth={true} onClose={handleClose} open={open}>
+            <Box sx={{ padding: 4, borderRadius: 4 }}>
+                <Stack direction="row" justifyContent="space-between" spacing={2}>
+                    <Typography style={{ fontSize: 24 }}>Mint</Typography>
+                    <IconButton aria-label="copy" onClick={handleClose}>
+                        <CloseIcon style={{ fontSize: 24 }} />
+                    </IconButton>
+                </Stack>
+                <Divider sx={{ mt: 3, mb: 3 }} variant="middle" />
+                <Typography sx={{ mt: 4 }} style={{ fontSize: 14 }}>
+                    Image URL
+                </Typography>
+                <TextField sx={{ width: '100%' }}
+                    id="input-url"
+                    value={url}
+                    onChange={handleUrlChange}
+                    InputProps={{
+                        sx: { borderRadius: 4, mt: 1 },
+                    }}>
+                </TextField>
+                <Typography sx={{ mt: 3 }} style={{ fontSize: 14 }}>
+                    Name
+                </Typography>
+                <TextField sx={{ width: '100%' }}
+                    id="input-name"
+                    value={name}
+                    onChange={handleNameChange}
+                    InputProps={{
+                        sx: { borderRadius: 4, mt: 1 },
+                    }}></TextField>
+                <Stack direction="row" justifyContent="center" sx={{ mt: 3, width: '100%' }}>
+                    <ThemeFullWidthButton text="Mint" onClick={handleMintClick} />
+                </Stack>
+            </Box>
+        </Dialog >
+    );
+}
+
+function metamaskDispatch(arg0: { type: any; payload: any; }) {
+    throw new Error("Function not implemented.");
+}
