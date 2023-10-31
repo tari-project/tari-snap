@@ -20,6 +20,8 @@ import ImageListItemBar from '@mui/material/ImageListItemBar';
 import { MintDialog } from '../MintDialog';
 import { styled } from '@mui/material/styles';
 import Card from '@mui/material/Card';
+import StartIcon from '@mui/icons-material/Start';
+import { SendNftDialog } from '../SendNftDialog';
 
 function Nfts() {
     const [metamaskState, metamaskDispatch] = useContext(MetaMaskContext);
@@ -27,6 +29,8 @@ function Nfts() {
 
     const [mintDialogOpen, setMintDialogOpen] = React.useState(false);
     const [receiveDialogOpen, setReceiveDialogOpen] = React.useState(false);
+    const [selectedNft, setSelectedNft] = React.useState(null);
+    const [sendDialogOpen, setSendDialogOpen] = React.useState(false);
     const [nfts, setNfts] = React.useState([]);
 
     const getNfts = async () => {
@@ -53,8 +57,9 @@ function Nfts() {
             const substates = nft_contents
                 .filter(content => content.result)
                 .map(content => {
-                    // metadata of the nft
-                    return content.result.substate_contents.substate.NonFungible.data['@@TAGGED@@'][1];
+                    const address = content.result.address;
+                    const metadata = content.result.substate_contents.substate.NonFungible.data['@@TAGGED@@'][1];
+                    return { address, metadata };
                 });
 
             return substates;
@@ -97,6 +102,15 @@ function Nfts() {
         copyToCliboard(text);
     };
 
+    const handleSendOpen = (nft) => {
+        setSelectedNft(nft);
+        setSendDialogOpen(true);
+    };
+
+    const handleSendClose = () => {
+        setSendDialogOpen(false);
+    };
+
     return (
         <Container>
             {tari.account?.public_key ?
@@ -134,11 +148,16 @@ function Nfts() {
                                 <Grid item xs={3}>
                                     <Stack direction="column" sx={{padding: 1}}>
                                         <Box sx={{ textAlign: 'center'}}>
-                                            <img style={{borderRadius: 8, width: '100%'}} src={nft.image_url}/>
+                                            <img style={{borderRadius: 8, width: '100%'}} src={nft.metadata.image_url}/>
                                         </Box>
-                                        <Typography sx={{mt: 0.5}} style={{ fontSize: 16 }} >
-                                            {nft.name}
-                                        </Typography>
+                                        <Stack direction="row" spacing={2} sx={{mt: 0.5}}>
+                                            <Typography style={{ fontSize: 16 }} >
+                                                {nft.metadata.name}
+                                            </Typography>
+                                            <IconButton aria-label="send" sx={{padding:0, minHeight: 0}} onClick={() => handleSendOpen(nft)}>
+                                                <StartIcon style={{ fontSize: 16 }}/>
+                                            </IconButton>
+                                        </Stack>
                                     </Stack>
                                 </Grid>
                             ))}
@@ -152,6 +171,11 @@ function Nfts() {
                         address={tari.account?.public_key}
                         open={receiveDialogOpen}
                         onClose={handleReceiveClose}
+                    />
+                    <SendNftDialog
+                        nft={selectedNft}
+                        open={sendDialogOpen}
+                        onClose={handleSendClose}
                     />
                 </Container>)
                 : (<div />)}
