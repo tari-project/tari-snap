@@ -18,6 +18,8 @@ import ImageList from '@mui/material/ImageList';
 import ImageListItem from '@mui/material/ImageListItem';
 import ImageListItemBar from '@mui/material/ImageListItemBar';
 import { MintDialog } from '../MintDialog';
+import { styled } from '@mui/material/styles';
+import Card from '@mui/material/Card';
 
 function Nfts() {
     const [metamaskState, metamaskDispatch] = useContext(MetaMaskContext);
@@ -127,25 +129,19 @@ function Nfts() {
                                 Owned NFTs
                             </Typography>
                         </Stack>
-                        <Grid container spacing={5}>
-                            <Grid item xs={12}>
-                                <ImageList cols={4} gap={8}>
-                                    {nfts.map((nft) => (
-                                        <ImageListItem>
-                                            <img
-                                                src={`${nft.image_url}?size=248&fit=fill&auto=format`}
-                                                srcSet={`${nft.image_url}?size=248&fit=fill&auto=format&dpr=2 4x`}
-                                                alt={nft.name}
-                                                loading="lazy"
-                                            />
-                                            <ImageListItemBar
-                                                title={nft.name}
-                                                position="below"
-                                            />
-                                        </ImageListItem>
-                                    ))}
-                                </ImageList>
-                            </Grid>
+                        <Grid container spacing={2} sx={{ mt: 3}}>
+                            {nfts.map((nft) => (
+                                <Grid item xs={3}>
+                                    <Stack direction="column" sx={{padding: 1}}>
+                                        <Box sx={{ textAlign: 'center'}}>
+                                            <img style={{borderRadius: 8, width: '100%'}} src={nft.image_url}/>
+                                        </Box>
+                                        <Typography sx={{mt: 0.5}} style={{ fontSize: 16 }} >
+                                            {nft.name}
+                                        </Typography>
+                                    </Stack>
+                                </Grid>
+                            ))}
                         </Grid>
                     </Paper>
                     <MintDialog
