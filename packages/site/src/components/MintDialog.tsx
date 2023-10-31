@@ -79,7 +79,7 @@ export function MintDialog(props: MintDialogProps) {
                     </IconButton>
                 </Stack>
                 <Box sx={{ textAlign: 'center'}}>
-                    <img style={{maxWidth: '50%', maxHeight: '50%'}} src={url}/>
+                    <img style={{maxWidth: '50%', maxHeight: '50%', borderRadius: '10px'}} src={url}/>
                 </Box>         
                 <Typography sx={{ mt: 4 }} style={{ fontSize: 14 }}>
                     Image URL
