@@ -5,7 +5,7 @@ import { decode_resource_address, decode_vault_id, getSubstate, int_array_to_hex
 import { getRistrettoKeyPair } from './keys';
 import { GetFreeTestCoinsRequest, GetSubstateRequest, TransferRequest } from './types';
 import { sendInstruction, sendTransaction } from './transactions';
-import { mintAccountNft } from './nfts';
+import { mintAccountNft, transferNft } from './nfts';
 
 // Due to a bug of how brfs interacts with babel, we need to use require() syntax instead of import pattern
 // https://github.com/browserify/brfs/issues/39
@@ -285,6 +285,8 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request }) => 
       return sendInstruction(wasm, request);
     case 'mintAccountNft':
       return mintAccountNft(wasm, request);
+    case 'transferNft':
+      return transferNft(wasm, request);
     case 'getSubstate':
       return getSubstateHandler(request);
     default:

@@ -38,8 +38,6 @@ export async function sendTransactionInternal(wasm: tari_wallet_lib.InitOutput, 
         required_substates,
     };
 
-    //return JSON.stringify({ indexer_url, submit_method, submit_params });
-
     await sendIndexerRequest(indexer_url, submit_method, submit_params);
 
     // TODO: keep polling the indexer until we get a result for the transaction

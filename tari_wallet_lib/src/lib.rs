@@ -21,7 +21,7 @@ use tari_crypto::tari_utilities::hex::Hex;
 use tari_crypto::tari_utilities::ByteArray;
 use tari_template_lib::args;
 use tari_template_lib::prelude::{
-    Amount, NonFungibleAddress, ResourceAddress, RistrettoPublicKeyBytes, TemplateAddress, tari_bor,
+    Amount, NonFungibleAddress, ResourceAddress, RistrettoPublicKeyBytes, TemplateAddress, tari_bor, NonFungibleId,
 };
 use transaction::instruction::Instruction;
 use transaction::transaction::Transaction;
@@ -66,6 +66,20 @@ pub fn get_owner_token(public_key_hex: &str) -> Result<JsValue, JsError> {
 #[wasm_bindgen]
 pub fn encode_metadata(metadata_js: JsValue) -> Result<JsValue, JsError> {
     metadata::encode_metadata(metadata_js)
+}
+
+#[wasm_bindgen]
+pub fn parse_resource_address(resource_address_str: &str) -> Result<JsValue, JsError> {
+    let resource_address =  ResourceAddress::from_str(resource_address_str)?;
+    Ok(serde_wasm_bindgen::to_value(&resource_address)?)
+}
+
+#[wasm_bindgen]
+pub fn encode_non_fungible_id(id_str: &str) -> Result<JsValue, JsError> {
+    let id =  NonFungibleId::try_from_canonical_string(id_str)
+        .map_err(|_| JsError::new("Invalid NonFungibleId String"))?;
+    let encoded_id = tari_bor::encode(&id)?;
+    Ok(serde_wasm_bindgen::to_value(&encoded_id)?)
 }
 
 #[wasm_bindgen]

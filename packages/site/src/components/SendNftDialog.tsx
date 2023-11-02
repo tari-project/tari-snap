@@ -11,6 +11,7 @@ import IconButton from "@mui/material/IconButton";
 import { MetaMaskContext, MetamaskActions, TariContext } from "../hooks";
 import { ThemeFullWidthButton } from "./Buttons";
 import { copyToCliboard, truncateText } from "../utils/text";
+import { defaultSnapOrigin } from "../config/snap";
 
 export interface SendNftDialogProps {
     nft: Object | null;
@@ -37,7 +38,28 @@ export function SendNftDialog(props: SendNftDialogProps) {
     };
 
     const handleSendClick = async () => {
-        console.log({ nft, recipient });
+        try {
+            const response = await window.ethereum.request({
+                method: 'wallet_invokeSnap',
+                params: {
+                    snapId: defaultSnapOrigin,
+                    request: {
+                        method: 'transferNft',
+                        params: {
+                            nft_address: nft.address,
+                            nft_id: nft.id,
+                            nft_resource: nft.collection,
+                            destination_public_key: recipient,
+                            fee: 1,
+                        }
+                    }
+                },
+            });
+            console.log({ response });
+        } catch (e) {
+            console.error(e);
+            metamaskDispatch({ type: MetamaskActions.SetError, payload: e });
+        }
         handleClose();
     };
 

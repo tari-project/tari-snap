@@ -45,21 +45,31 @@ function Nfts() {
                 .filter(res => res.type === 'nonfungible')
                 .map(res => {
                     const collection = res.resource_address;
-                    const items = res.token_ids.map(id => `${collection} nft_${id}`);
+                    const items = res.token_ids.map(id => {
+                        return {
+                            address: `${collection} nft_${id}`,
+                            collection,
+                            id
+                        }
+                    });
                     return items;
                 })
                 .flat();
 
-            const nft_contents = await Promise.all(nft_addresses.map(async (addr: any) => {
-                return await getSubstate(addr);
+            const nft_contents = await Promise.all(nft_addresses.map(async (nft: any) => {
+                const content = await getSubstate(nft.address);
+                return {
+                    ...nft,
+                    content
+                }
             }));
 
             const substates = nft_contents
-                .filter(content => content.result)
-                .map(content => {
-                    const address = content.result.address;
-                    const metadata = content.result.substate_contents.substate.NonFungible.data['@@TAGGED@@'][1];
-                    return { address, metadata };
+                .filter(nft => nft.content.result)
+                .map(nft => {
+                    //const address = content.result.address;
+                    const metadata = nft.content.result.substate_contents.substate.NonFungible.data['@@TAGGED@@'][1];
+                    return { ...nft, metadata };
                 });
 
             return substates;
