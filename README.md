@@ -12,6 +12,7 @@ To interact with Snaps, you will need to install [MetaMask Flask](https://metama
 
 You will also need a Tari network running, with an indexer. 
 
+For building the project, Node.js version 18 or superior is required.
 
 ## Getting Started
 
@@ -24,6 +25,7 @@ cd tari-snap
 Then you need to build the WebAssembly library used to build Tari transactions:
 ```shell
 cd tari_wallet_lib
+npm install
 npm run build
 ```
 
