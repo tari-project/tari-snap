@@ -811,6 +811,7 @@ dependencies = [
  "serde-wasm-bindgen",
  "serde_json",
  "tari_crypto",
+ "tari_template_abi",
  "tari_template_lib",
  "thiserror",
  "wasm-bindgen",

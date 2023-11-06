@@ -1,10 +1,11 @@
 import { Json, JsonRpcRequest, OnRpcRequestHandler } from '@metamask/snaps-types';
 import { heading, panel, text } from '@metamask/snaps-ui';
 import * as tari_wallet_lib from './tari_wallet_lib';
-import { decode_resource_address, decode_vault_id, sendIndexerRequest, substateExists } from './tari_indexer_client';
+import { decode_resource_address, decode_vault_id, getSubstate, int_array_to_hex, sendIndexerRequest, substateExists } from './tari_indexer_client';
 import { getRistrettoKeyPair } from './keys';
-import { GetFreeTestCoinsRequest, TransferRequest } from './types';
+import { GetFreeTestCoinsRequest, GetSubstateRequest, TransferRequest } from './types';
 import { sendInstruction, sendTransaction } from './transactions';
+import { mintAccountNft, transferNft } from './nfts';
 
 // Due to a bug of how brfs interacts with babel, we need to use require() syntax instead of import pattern
 // https://github.com/browserify/brfs/issues/39
@@ -51,13 +52,13 @@ async function getAccountData(request: JsonRpcRequest<Json[] | Record<string, Js
   };
   const result = await sendIndexerRequest(indexer_url, method, params);
   if (!result || !result.substate_contents) {
-    return { public_key, component_address, balances: [] }
+    return { public_key, component_address, resources: [] }
   }
   const vaults = result.substate_contents.substate.Component.state.vaults;
 
   const vault_ids = vaults.map((v: Object[]) => { return decode_vault_id(v[1]); });
 
-  const balances = await Promise.all(vault_ids.map(async (v: any) => {
+  const resources = await Promise.all(vault_ids.map(async (v: any) => {
     const result = await sendIndexerRequest(indexer_url, 'inspect_substate', {
       address: v,
       version: null
@@ -69,22 +70,38 @@ async function getAccountData(request: JsonRpcRequest<Json[] | Record<string, Js
       const data = container.Confidential;
       const resource_address = decode_resource_address(data.address);
       const balance = data.revealed_amount;
-      return { resource_address, balance, isConfidential: true };
+      return { type: 'confidential', resource_address, balance };
     } else if (container.Fungible) {
       const data = container.Fungible;
       const resource_address = decode_resource_address(data.address);
       const balance = data.amount;
-      return { resource_address, balance, isConfidential: false };
+      return { type: 'fungible', resource_address, balance };
     } else if (container.NonFungible) {
-      // TODO: decode nfts
-      return null;
+      const data = container.NonFungible;
+      const resource_address = decode_resource_address(data.address);
+      const token_ids = data.token_ids.map(id => {
+        if (id.U256) {
+          const hex = int_array_to_hex(id.U256);
+          return `uuid:${hex}`;
+        } else if (id.String) {
+          return `str:${id.String}`;
+        } else if (id.Uint32) {
+          return `u32:${id.Uint32}`;
+        } else if (id.Uint64) {
+          return `u64:${id.Uint64}`;
+        } else {
+          // TODO: handle errors
+          return null;
+        }
+      });
+      return { type: 'nonfungible', resource_address, token_ids };
     } else {
       // TODO: handle errors
       return null;
     }
   }));
 
-  return { public_key, component_address, balances }
+  return { public_key, component_address, resources }
 }
 
 async function transfer(request: JsonRpcRequest<Json[] | Record<string, Json>>) {
@@ -229,6 +246,15 @@ async function getFreeTestCoins(request: JsonRpcRequest<Json[] | Record<string, 
   return { transaction_id };
 }
 
+async function getSubstateHandler(request: JsonRpcRequest<Json[] | Record<string, Json>>) {
+  const params = request.params as GetSubstateRequest;
+  const { substate_address } = params;
+
+  const indexer_url = process.env.TARI_INDEXER_URL;
+
+  return await getSubstate(indexer_url, substate_address);
+}
+
 /**
  * Handle incoming JSON-RPC requests, sent through `wallet_invokeSnap`.
  *
@@ -257,6 +283,12 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request }) => 
       return sendTransaction(wasm, request);
     case 'sendInstruction':
       return sendInstruction(wasm, request);
+    case 'mintAccountNft':
+      return mintAccountNft(wasm, request);
+    case 'transferNft':
+      return transferNft(wasm, request);
+    case 'getSubstate':
+      return getSubstateHandler(request);
     default:
       throw new Error('Method not found.');
   }

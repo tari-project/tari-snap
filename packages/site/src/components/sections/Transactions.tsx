@@ -60,7 +60,7 @@ function Transactions() {
         }
 
         // we keep polling for transactions to keep them updated
-        setTimeout(async () => { await refreshTransactions() }, 4000);
+        setTimeout(async () => { await refreshTransactions() }, 5000);
     }
 
     useEffect(() => {

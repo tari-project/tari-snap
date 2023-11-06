@@ -5,7 +5,7 @@ import { sendIndexerRequest } from './tari_indexer_client';
 import { getRistrettoKeyPair } from './keys';
 import { SendInstructionRequest, SendTransactionRequest } from './types';
 
-async function sendTransactionInternal(wasm: tari_wallet_lib.InitOutput, request: SendTransactionRequest) {
+export async function sendTransactionInternal(wasm: tari_wallet_lib.InitOutput, request: SendTransactionRequest) {
     const { instructions, input_refs, required_substates, is_dry_run } = request;
 
     const userConfirmation = await snap.request({
@@ -24,7 +24,7 @@ async function sendTransactionInternal(wasm: tari_wallet_lib.InitOutput, request
     }
 
     const accountIndex = 0;
-    const { secret_key, public_key } = await getRistrettoKeyPair(accountIndex);
+    const { secret_key } = await getRistrettoKeyPair(accountIndex);
 
     // build and sign transaction using the wasm lib
     const transaction = tari_wallet_lib.create_transaction(secret_key, instructions, input_refs);
@@ -51,9 +51,8 @@ export async function sendTransaction(wasm: tari_wallet_lib.InitOutput, request:
     return await sendTransactionInternal(wasm, params);
 }
 
-export async function sendInstruction(wasm: tari_wallet_lib.InitOutput, request: JsonRpcRequest<Json[] | Record<string, Json>>) {
-    const params = request.params as SendInstructionRequest;
-    let { instructions, input_refs, required_substates, is_dry_run, fee, dump_account } = params;
+export async function sendInstructionInternal(wasm: tari_wallet_lib.InitOutput, request: SendInstructionRequest) {
+    let { instructions, input_refs, required_substates, is_dry_run, fee, dump_account } = request;
 
     if (dump_account) {
         // TODO: the instruction type should accept strings as well
@@ -78,7 +77,7 @@ export async function sendInstruction(wasm: tari_wallet_lib.InitOutput, request:
         CallMethod: {
             component_address: dump_account,
             method: "pay_fee",
-            args: [fee]
+            args: [`Amount(${fee})`]
         }
     });
 
@@ -90,4 +89,9 @@ export async function sendInstruction(wasm: tari_wallet_lib.InitOutput, request:
     };
 
     return await sendTransactionInternal(wasm, sendTransactionRequest);
+}
+
+export async function sendInstruction(wasm: tari_wallet_lib.InitOutput, request: JsonRpcRequest<Json[] | Record<string, Json>>) {
+    const params = request.params as SendInstructionRequest;
+    return await sendInstructionInternal(wasm, params);
 }

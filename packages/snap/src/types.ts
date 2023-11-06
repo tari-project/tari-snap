@@ -25,3 +25,7 @@ export type SendInstructionRequest = {
     fee: number,
     dump_account: string,
 };
+
+export type GetSubstateRequest = {
+    substate_address: string,
+};

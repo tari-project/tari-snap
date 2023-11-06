@@ -2,6 +2,7 @@ pub mod argument_parser;
 pub mod component;
 pub mod fee_claim;
 pub mod hashing;
+pub mod metadata;
 pub mod serde_with;
 pub mod shard_id;
 pub mod substate;
@@ -11,7 +12,7 @@ pub mod types;
 
 use std::str::FromStr;
 
-use component::get_account_address_from_public_key;
+use component::{get_account_address_from_public_key, get_account_nft_address_from_public_key};
 use shard_id::ShardId;
 use substate::SubstateAddress;
 use tari_crypto::keys::PublicKey;
@@ -20,7 +21,7 @@ use tari_crypto::tari_utilities::hex::Hex;
 use tari_crypto::tari_utilities::ByteArray;
 use tari_template_lib::args;
 use tari_template_lib::prelude::{
-    Amount, NonFungibleAddress, ResourceAddress, RistrettoPublicKeyBytes, TemplateAddress,
+    Amount, NonFungibleAddress, ResourceAddress, RistrettoPublicKeyBytes, TemplateAddress, tari_bor, NonFungibleId,
 };
 use transaction::instruction::Instruction;
 use transaction::transaction::Transaction;
@@ -43,6 +44,42 @@ pub fn build_ristretto_public_key(ecdsa_private_key: &str) -> Result<String, JsE
 pub fn get_account_component_address(public_key: &str) -> Result<String, JsError> {
     let account_address = get_account_address_from_public_key(&public_key)?;
     Ok(account_address.to_string())
+}
+
+#[wasm_bindgen]
+pub fn get_account_nft_component_address(public_key: &str) -> Result<String, JsError> {
+    let account_nft_address = get_account_nft_address_from_public_key(&public_key)?;
+    Ok(account_nft_address.to_string())
+}
+
+#[wasm_bindgen]
+pub fn get_owner_token(public_key_hex: &str) -> Result<JsValue, JsError> {
+    let public_key = RistrettoPublicKey::from_hex(public_key_hex)?;
+    let owner_token = NonFungibleAddress::from_public_key(
+        RistrettoPublicKeyBytes::from_bytes(public_key.as_bytes()).unwrap(),
+    );
+    let encoded_token = tari_bor::encode(&owner_token)?;
+    
+    Ok(serde_wasm_bindgen::to_value(&encoded_token)?)
+}
+
+#[wasm_bindgen]
+pub fn encode_metadata(metadata_js: JsValue) -> Result<JsValue, JsError> {
+    metadata::encode_metadata(metadata_js)
+}
+
+#[wasm_bindgen]
+pub fn parse_resource_address(resource_address_str: &str) -> Result<JsValue, JsError> {
+    let resource_address =  ResourceAddress::from_str(resource_address_str)?;
+    Ok(serde_wasm_bindgen::to_value(&resource_address)?)
+}
+
+#[wasm_bindgen]
+pub fn encode_non_fungible_id(id_str: &str) -> Result<JsValue, JsError> {
+    let id =  NonFungibleId::try_from_canonical_string(id_str)
+        .map_err(|_| JsError::new("Invalid NonFungibleId String"))?;
+    let encoded_id = tari_bor::encode(&id)?;
+    Ok(serde_wasm_bindgen::to_value(&encoded_id)?)
 }
 
 #[wasm_bindgen]
