@@ -4,7 +4,7 @@ import Transactions from '../components/sections/Transactions';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import MenuItem from '@mui/material/MenuItem';
-import Nfts from '../components/sections/NFTs';
+import Nfts from '../components/sections/Nfts';
 
 
 function Index() {
