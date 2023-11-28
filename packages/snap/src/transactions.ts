@@ -38,12 +38,11 @@ export async function sendTransactionInternal(wasm: tari_wallet_lib.InitOutput, 
         required_substates,
     };
 
-    await sendIndexerRequest(indexer_url, submit_method, submit_params);
+    const res = await sendIndexerRequest(indexer_url, submit_method, submit_params);
 
     // TODO: keep polling the indexer until we get a result for the transaction
-    const transaction_id = transaction.id;
 
-    return { transaction_id };
+    return res;
 }
 
 export async function sendTransaction(wasm: tari_wallet_lib.InitOutput, request: JsonRpcRequest<Json[] | Record<string, Json>>) {

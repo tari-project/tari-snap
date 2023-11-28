@@ -31,6 +31,7 @@ export function SendDialog(props: SendDialogProps) {
     const [tokenBalance, setTokenBalance] = React.useState(0);
     const [amount, setAmount] = React.useState(0);
     const [recipient, setRecipient] = React.useState('');
+    const [fee, setFee] = React.useState(0);
 
     // clear dialog form each time it closes
     useEffect(() => {
@@ -74,6 +75,10 @@ export function SendDialog(props: SendDialogProps) {
         setRecipient(event.target.value);
     };
 
+    const handleFeeChange = async (event) => {
+        setFee(event.target.value);
+    };
+
     const handleMaxBalanceClick = async () => {
         setAmount(tokenBalance);
     };
@@ -101,7 +106,7 @@ export function SendDialog(props: SendDialogProps) {
                             amount,
                             resource_address: token,
                             destination_public_key: recipient,
-                            fee: 1,
+                            fee,
                         }
                     }
                 },
@@ -174,6 +179,15 @@ export function SendDialog(props: SendDialogProps) {
                     </Typography>
                     <TextField sx={{ mt: 1, width: '100%' }} id="recipient" placeholder="0"
                         onChange={handleRecipientChange}
+                        InputProps={{
+                            sx: { borderRadius: 4 },
+                        }}>
+                    </TextField>
+                    <Typography sx={{ mt: 4 }} style={{ fontSize: 14 }}>
+                        Fee
+                    </Typography>
+                    <TextField sx={{ mt: 1, width: '100%' }} id="fee" placeholder="0"
+                        onChange={handleFeeChange}
                         InputProps={{
                             sx: { borderRadius: 4 },
                         }}>
