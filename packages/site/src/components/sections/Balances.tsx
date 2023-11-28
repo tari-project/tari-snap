@@ -99,7 +99,7 @@ function Balances() {
     };
 
     const handleGetTestCoinsClick = async () => {
-        await getFreeTestCoins(1000, 1);
+        await getFreeTestCoins(100000, 1000);
     };
 
     return (
