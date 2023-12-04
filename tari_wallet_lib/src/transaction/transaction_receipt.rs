@@ -8,7 +8,7 @@ use std::{
 
 use serde::{Deserialize, Serialize};
 use tari_bor::BorTag;
-use tari_template_lib::{models::BinaryTag, Hash, HashParseError, prelude::tari_bor};
+use tari_template_lib::{models::BinaryTag, Hash, HashParseError };
 
 const TAG: u64 = BinaryTag::TransactionReceipt.as_u64();
 

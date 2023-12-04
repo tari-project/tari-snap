@@ -1,5 +1,5 @@
 use serde::{Serialize, Deserialize};
-use tari_template_lib::prelude::{Metadata, tari_bor};
+use tari_template_lib::prelude::Metadata;
 use wasm_bindgen::{JsValue, JsError};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

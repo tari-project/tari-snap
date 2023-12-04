@@ -21,7 +21,7 @@ use tari_crypto::tari_utilities::hex::Hex;
 use tari_crypto::tari_utilities::ByteArray;
 use tari_template_lib::args;
 use tari_template_lib::prelude::{
-    Amount, NonFungibleAddress, ResourceAddress, RistrettoPublicKeyBytes, TemplateAddress, tari_bor, NonFungibleId,
+    Amount, NonFungibleAddress, ResourceAddress, RistrettoPublicKeyBytes, TemplateAddress, NonFungibleId,
 };
 use transaction::instruction::Instruction;
 use transaction::transaction::Transaction;

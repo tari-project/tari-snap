@@ -20,6 +20,7 @@ export function MintDialog(props: MintDialogProps) {
 
     const [url, setUrl] = React.useState('');
     const [name, setName] = React.useState('');
+    const [fee, setFee] = React.useState(0);
 
     // clear dialog form each time it closes
     useEffect(() => {
@@ -41,12 +42,19 @@ export function MintDialog(props: MintDialogProps) {
         setName(event.target.value);
     };
 
+    const handleFeeChange = async (event) => {
+        setFee(event.target.value);
+    };
+
     const handleMintClick = async () => {
         try {
-            const metadata = [
-                { key: 'name', value: name },
-                { key: 'image_url', value: url },
-            ];
+            const metadata = [];
+            if (name) {
+                metadata.push({ key: 'name', value: name });
+            }
+            if (url) {
+                metadata.push({ key: 'image_url', value: url });
+            }
             const response = await window.ethereum.request({
                 method: 'wallet_invokeSnap',
                 params: {
@@ -55,7 +63,7 @@ export function MintDialog(props: MintDialogProps) {
                         method: 'mintAccountNft',
                         params: {
                             metadata,
-                            fee: 1,
+                            fee,
                         }
                     }
                 },
@@ -102,6 +110,18 @@ export function MintDialog(props: MintDialogProps) {
                     InputProps={{
                         sx: { borderRadius: 4, mt: 1 },
                     }}></TextField>
+                <Typography sx={{ mt: 3 }} style={{ fontSize: 14 }}>
+                    Fee
+                </Typography>
+                <TextField sx={{ mt: 1, width: '100%' }} 
+                    placeholder="0"
+                    id="input-fee"
+                    value={fee}
+                    onChange={handleFeeChange}
+                    InputProps={{
+                        sx: { borderRadius: 4, mt: 1 },
+                    }}>
+                 </TextField>
                 <Stack direction="row" justifyContent="center" sx={{ mt: 3, width: '100%' }}>
                     <ThemeFullWidthButton text="Mint" onClick={handleMintClick} />
                 </Stack>
