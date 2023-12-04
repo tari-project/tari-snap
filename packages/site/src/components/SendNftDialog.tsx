@@ -13,6 +13,7 @@ import { ThemeFullWidthButton } from "./Buttons";
 import { copyToCliboard, truncateText } from "../utils/text";
 import { defaultSnapOrigin } from "../config/snap";
 import BadgeOutlined from '@mui/icons-material/BadgeOutlined';
+import QuestionMarkOutlined from "@mui/icons-material/QuestionMarkOutlined";
 
 export interface SendNftDialogProps {
     nft: Object | null;
@@ -37,6 +38,14 @@ export function SendNftDialog(props: SendNftDialogProps) {
     const handleRecipientChange = async (event) => {
         setRecipient(event.target.value);
     };
+
+    const nftIsImage = (nft: any) => {
+        return nft.metadata.image_url;
+    }
+
+    const nftIsBadge = (nft: any) => {
+        return Object.keys(nft.metadata).length === 0;
+    }
 
     const handleSendClick = async () => {
         try {
@@ -91,11 +100,13 @@ export function SendNftDialog(props: SendNftDialogProps) {
                 </Stack>
                 <Divider sx={{ mt: 3, mb: 3 }} variant="middle" />
                 <Box sx={{ textAlign: 'center' }}>
-                    {nft.metadata.image_url ?
-                        (<img style={{ maxWidth: '50%', maxHeight: '50%', borderRadius: '10px' }} src={nft.metadata.image_url}/>):
-                        (<BadgeOutlined color='disabled' style={{ fontSize: 64, height: '100%' }}/>)}
+                    {
+                        nftIsImage(nft) ? (<img style={{ maxWidth: '50%', maxHeight: '50%', borderRadius: '10px' }} src={nft.metadata.image_url} />) :
+                        nftIsBadge(nft) ? (<BadgeOutlined color='disabled' style={{ fontSize: 64, height: '100%' }} />) :
+                        (<QuestionMarkOutlined color='disabled' style={{ fontSize: 64, height: '100%' }} />)
+                    }
                 </Box>
-                <Stack direction="column" alignItems="center" justifyContent="center" sx={{mt:2}}>
+                <Stack direction="column" alignItems="center" justifyContent="center" sx={{ mt: 2 }}>
                     <Typography alignSelf="center" style={{ fontSize: 18 }} >
                         {truncateText(nft.metadata.name, 20)}
                     </Typography>

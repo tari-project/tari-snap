@@ -17,7 +17,9 @@ import { MintDialog } from '../MintDialog';
 import StartIcon from '@mui/icons-material/Start';
 import { SendNftDialog } from '../SendNftDialog';
 import BadgeOutlined from '@mui/icons-material/BadgeOutlined';
+import QuestionMarkOutlined from '@mui/icons-material/QuestionMarkOutlined';
 import Checkbox from '@mui/material/Checkbox';
+
 
 function Nfts() {
     const [metamaskState, metamaskDispatch] = useContext(MetaMaskContext);
@@ -113,7 +115,7 @@ function Nfts() {
         }
 
         if (!otherNftCheck) {
-            filtered = filtered.filter((nft) => !nftIsImage(nft) || !nftIsBadge(nft));
+            filtered = filtered.filter((nft) => nftIsImage(nft) || nftIsBadge(nft));
         }
 
         setFilteredNfts(filtered);
@@ -213,9 +215,11 @@ function Nfts() {
                                     <Grid item xs={3}>
                                         <Stack direction="column" sx={{ padding: 1, height: '100%' }}>
                                             <Box sx={{ textAlign: 'center', verticalAlign: 'middle', height: '80%' }}>
-                                                {nft.metadata.image_url ?
-                                                    (<img style={{ borderRadius: 8, width: '100%' }} src={nft.metadata.image_url} />) :
-                                                    (<BadgeOutlined color='disabled' style={{ fontSize: 64, height: '100%' }} />)}
+                                                {
+                                                    nftIsImage(nft) ? (<img style={{ borderRadius: 8, width: '100%' }} src={nft.metadata.image_url} />) :
+                                                    nftIsBadge(nft) ? (<BadgeOutlined color='disabled' style={{ fontSize: 64, height: '100%' }} />) :
+                                                    (<QuestionMarkOutlined color='disabled' style={{ fontSize: 64, height: '100%' }} />)
+                                                }
                                             </Box>
                                             <Stack direction="row" spacing={2} sx={{ mt: 0.5 }}>
                                                 <Typography style={{ fontSize: 16 }} >
