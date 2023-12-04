@@ -12,6 +12,7 @@ import { MetaMaskContext, MetamaskActions, TariContext } from "../hooks";
 import { ThemeFullWidthButton } from "./Buttons";
 import { copyToCliboard, truncateText } from "../utils/text";
 import { defaultSnapOrigin } from "../config/snap";
+import BadgeOutlined from '@mui/icons-material/BadgeOutlined';
 
 export interface SendNftDialogProps {
     nft: Object | null;
@@ -90,7 +91,9 @@ export function SendNftDialog(props: SendNftDialogProps) {
                 </Stack>
                 <Divider sx={{ mt: 3, mb: 3 }} variant="middle" />
                 <Box sx={{ textAlign: 'center' }}>
-                    <img style={{ maxWidth: '50%', maxHeight: '50%', borderRadius: '10px' }} src={nft.metadata.image_url} />
+                    {nft.metadata.image_url ?
+                        (<img style={{ maxWidth: '50%', maxHeight: '50%', borderRadius: '10px' }} src={nft.metadata.image_url}/>):
+                        (<BadgeOutlined color='disabled' style={{ fontSize: 64, height: '100%' }}/>)}
                 </Box>
                 <Stack direction="column" alignItems="center" justifyContent="center" sx={{mt:2}}>
                     <Typography alignSelf="center" style={{ fontSize: 18 }} >

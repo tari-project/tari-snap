@@ -7,21 +7,16 @@ import Stack from '@mui/material/Stack';
 import React from 'react';
 import Box from '@mui/material/Box';
 import { ThemeButton } from '../Buttons';
-import { defaultSnapOrigin } from '../../config/snap';
 import { ReceiveDialog } from '../ReceiveDialog';
 import IconButton from '@mui/material/IconButton';
-import { copyToCliboard } from '../../utils/text';
+import { copyToCliboard, truncateText } from '../../utils/text';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { getAccountData, getSubstate } from '../../utils/snap';
 import Grid from '@mui/material/Grid';
-import ImageList from '@mui/material/ImageList';
-import ImageListItem from '@mui/material/ImageListItem';
-import ImageListItemBar from '@mui/material/ImageListItemBar';
 import { MintDialog } from '../MintDialog';
-import { styled } from '@mui/material/styles';
-import Card from '@mui/material/Card';
 import StartIcon from '@mui/icons-material/Start';
 import { SendNftDialog } from '../SendNftDialog';
+import BadgeOutlined from '@mui/icons-material/BadgeOutlined';
 
 function Nfts() {
     const [metamaskState, metamaskDispatch] = useContext(MetaMaskContext);
@@ -154,15 +149,17 @@ function Nfts() {
                             </Typography>
                         </Stack>
                         <Grid container spacing={2} sx={{ mt: 3}}>
-                            {nfts.map((nft) => (
+                            {nfts.map((nft: any) => (
                                 <Grid item xs={3}>
-                                    <Stack direction="column" sx={{padding: 1}}>
-                                        <Box sx={{ textAlign: 'center'}}>
-                                            <img style={{borderRadius: 8, width: '100%'}} src={nft.metadata.image_url}/>
+                                    <Stack direction="column" sx={{padding: 1, height: '100%' }}>
+                                        <Box sx={{ textAlign: 'center', verticalAlign: 'middle', height: '80%'}}>
+                                            {nft.metadata.image_url ?
+                                                (<img style={{borderRadius: 8, width: '100%'}} src={nft.metadata.image_url}/>):
+                                                (<BadgeOutlined color='disabled' style={{ fontSize: 64, height: '100%' }}/>)}
                                         </Box>
                                         <Stack direction="row" spacing={2} sx={{mt: 0.5}}>
                                             <Typography style={{ fontSize: 16 }} >
-                                                {nft.metadata.name}
+                                                {nft.metadata.name ? truncateText(nft.metadata.name, 20) : truncateText(nft.address, 20)}
                                             </Typography>
                                             <IconButton aria-label="send" sx={{padding:0, minHeight: 0}} onClick={() => handleSendOpen(nft)}>
                                                 <StartIcon style={{ fontSize: 16 }}/>
