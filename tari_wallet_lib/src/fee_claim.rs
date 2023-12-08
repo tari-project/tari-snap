@@ -2,10 +2,9 @@
 //    SPDX-License-Identifier: BSD-3-Clause
 
 use std::{fmt, fmt::Display};
-
-use serde::{Deserialize, Serialize};
 use tari_bor::BorTag;
-use tari_template_lib::{models::BinaryTag, prelude::tari_bor, Hash};
+use serde::{Deserialize, Serialize};
+use tari_template_lib::{models::BinaryTag, Hash};
 
 use crate::hashing::{hasher, EngineHashDomainLabel};
 

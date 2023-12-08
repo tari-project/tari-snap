@@ -23,6 +23,7 @@ tari_crypto = { version = "0.17" }
 thiserror = "1.0.49"
 tari_template_lib = { git="https://github.com/tari-project/tari-dan.git" }
 tari_template_abi = { git="https://github.com/tari-project/tari-dan.git" }
+tari_bor = { git="https://github.com/tari-project/tari-dan.git" }
 digest = "0.9.0"
 serde = "1.0.126"
 serde_json = "1.0"

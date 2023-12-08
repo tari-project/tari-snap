@@ -1,15 +1,14 @@
 use crate::{serde_with, hashing::{EngineHashDomainLabel, hasher}, transaction::transaction_receipt::TransactionReceiptAddress, fee_claim::FeeClaimAddress};
 use serde::{Deserialize, Serialize};
+use tari_bor::{encode, BorError, decode_exact};
 use std::{
     fmt::{Display, Formatter},
     str::FromStr,
 };
 use tari_template_lib::{Hash, prelude::NonFungibleId};
 use tari_template_lib::{
-    encode,
     models::{NonFungibleIndexAddress, UnclaimedConfidentialOutputAddress, VaultId},
     prelude::{
-        tari_bor::{decode_exact, BorError},
         ComponentAddress, NonFungibleAddress, ResourceAddress,
     },
 };

@@ -1,4 +1,4 @@
-import { useContext, useEffect } from 'react';
+import { useContext, useEffect, useRef } from 'react';
 import { MetaMaskContext, MetamaskActions, TariContext } from '../../hooks';
 import Container from '@mui/material/Container';
 import Typography from '@mui/material/Typography';
@@ -7,21 +7,19 @@ import Stack from '@mui/material/Stack';
 import React from 'react';
 import Box from '@mui/material/Box';
 import { ThemeButton } from '../Buttons';
-import { defaultSnapOrigin } from '../../config/snap';
 import { ReceiveDialog } from '../ReceiveDialog';
 import IconButton from '@mui/material/IconButton';
-import { copyToCliboard } from '../../utils/text';
+import { copyToCliboard, truncateText } from '../../utils/text';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { getAccountData, getSubstate } from '../../utils/snap';
 import Grid from '@mui/material/Grid';
-import ImageList from '@mui/material/ImageList';
-import ImageListItem from '@mui/material/ImageListItem';
-import ImageListItemBar from '@mui/material/ImageListItemBar';
 import { MintDialog } from '../MintDialog';
-import { styled } from '@mui/material/styles';
-import Card from '@mui/material/Card';
 import StartIcon from '@mui/icons-material/Start';
 import { SendNftDialog } from '../SendNftDialog';
+import BadgeOutlined from '@mui/icons-material/BadgeOutlined';
+import QuestionMarkOutlined from '@mui/icons-material/QuestionMarkOutlined';
+import Checkbox from '@mui/material/Checkbox';
+
 
 function Nfts() {
     const [metamaskState, metamaskDispatch] = useContext(MetaMaskContext);
@@ -32,6 +30,10 @@ function Nfts() {
     const [selectedNft, setSelectedNft] = React.useState(null);
     const [sendDialogOpen, setSendDialogOpen] = React.useState(false);
     const [nfts, setNfts] = React.useState([]);
+    const [filteredNfts, setFilteredNfts] = React.useState([]);
+    const [imageNftCheck, setImageNftCheck] = React.useState(true);
+    const [badgeNftCheck, setBadgeNftCheck] = React.useState(true);
+    const [otherNftCheck, setOtherNftCheck] = React.useState(true);
 
     const getNfts = async () => {
         try {
@@ -91,6 +93,48 @@ function Nfts() {
     useEffect(() => {
         refreshNfts();
     }, []);
+
+    const nftIsImage = (nft: any) => {
+        return nft.metadata.image_url;
+    }
+
+    const nftIsBadge = (nft: any) => {
+        return Object.keys(nft.metadata).length === 0;
+    }
+
+    // filter grid of nfts when the checkboxes or the account nfts change
+    useEffect(() => {
+        let filtered = nfts;
+
+        if (!imageNftCheck) {
+            filtered = filtered.filter((nft) => !nftIsImage(nft));
+        }
+
+        if (!badgeNftCheck) {
+            filtered = filtered.filter((nft) => !nftIsBadge(nft));
+        }
+
+        if (!otherNftCheck) {
+            filtered = filtered.filter((nft) => nftIsImage(nft) || nftIsBadge(nft));
+        }
+
+        setFilteredNfts(filtered);
+    }, [nfts, imageNftCheck, badgeNftCheck, otherNftCheck]);
+
+    const handleCheckImages = (event: any) => {
+        let checkboxValue = event.target.checked;
+        setImageNftCheck(checkboxValue);
+    };
+
+    const handleCheckBadges = (event: any) => {
+        let checkboxValue = event.target.checked;
+        setBadgeNftCheck(checkboxValue);
+    };
+
+    const handleCheckOther = (event: any) => {
+        let checkboxValue = event.target.checked;
+        setOtherNftCheck(checkboxValue);
+    };
 
     const handleMintOpen = () => {
         setMintDialogOpen(true);
@@ -152,26 +196,44 @@ function Nfts() {
                             <Typography style={{ fontSize: 24 }} >
                                 Owned NFTs
                             </Typography>
-                        </Stack>
-                        <Grid container spacing={2} sx={{ mt: 3}}>
-                            {nfts.map((nft) => (
-                                <Grid item xs={3}>
-                                    <Stack direction="column" sx={{padding: 1}}>
-                                        <Box sx={{ textAlign: 'center'}}>
-                                            <img style={{borderRadius: 8, width: '100%'}} src={nft.metadata.image_url}/>
-                                        </Box>
-                                        <Stack direction="row" spacing={2} sx={{mt: 0.5}}>
-                                            <Typography style={{ fontSize: 16 }} >
-                                                {nft.metadata.name}
-                                            </Typography>
-                                            <IconButton aria-label="send" sx={{padding:0, minHeight: 0}} onClick={() => handleSendOpen(nft)}>
-                                                <StartIcon style={{ fontSize: 16 }}/>
-                                            </IconButton>
+                            <Stack direction="row" spacing={2} sx={{ mt: 0.5 }}>
+                                <Stack direction="row" spacing={0.5} justifyContent="flex-start" alignItems='center'>
+                                    <Checkbox defaultChecked onClick={handleCheckImages} value={imageNftCheck} />
+                                    <Typography style={{ fontSize: 14 }}>Images</Typography>
+                                </Stack>
+                                <Stack direction="row" spacing={0.5} justifyContent="flex-start" alignItems='center'>
+                                    <Checkbox defaultChecked onClick={handleCheckBadges} value={badgeNftCheck} />
+                                    <Typography style={{ fontSize: 14 }}>Badges</Typography>
+                                </Stack>
+                                <Stack direction="row" spacing={0.5} justifyContent="flex-start" alignItems='center'>
+                                    <Checkbox defaultChecked onClick={handleCheckOther} value={otherNftCheck} />
+                                    <Typography style={{ fontSize: 14 }}>Other</Typography>
+                                </Stack>
+                            </Stack>
+                            <Grid container spacing={2} sx={{ mt: 3 }}>
+                                {filteredNfts.map((nft: any) => (
+                                    <Grid item xs={3}>
+                                        <Stack direction="column" sx={{ padding: 1, height: '100%' }}>
+                                            <Box sx={{ textAlign: 'center', verticalAlign: 'middle', height: '80%' }}>
+                                                {
+                                                    nftIsImage(nft) ? (<img style={{ borderRadius: 8, width: '100%' }} src={nft.metadata.image_url} />) :
+                                                    nftIsBadge(nft) ? (<BadgeOutlined color='disabled' style={{ fontSize: 64, height: '100%' }} />) :
+                                                    (<QuestionMarkOutlined color='disabled' style={{ fontSize: 64, height: '100%' }} />)
+                                                }
+                                            </Box>
+                                            <Stack direction="row" spacing={2} sx={{ mt: 0.5 }}>
+                                                <Typography style={{ fontSize: 16 }} >
+                                                    {nft.metadata.name ? truncateText(nft.metadata.name, 20) : truncateText(nft.address, 20)}
+                                                </Typography>
+                                                <IconButton aria-label="send" sx={{ padding: 0, minHeight: 0 }} onClick={() => handleSendOpen(nft)}>
+                                                    <StartIcon style={{ fontSize: 16 }} />
+                                                </IconButton>
+                                            </Stack>
                                         </Stack>
-                                    </Stack>
-                                </Grid>
-                            ))}
-                        </Grid>
+                                    </Grid>
+                                ))}
+                            </Grid>
+                        </Stack>
                     </Paper>
                     <MintDialog
                         open={mintDialogOpen}
