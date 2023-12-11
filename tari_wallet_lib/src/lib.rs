@@ -1,31 +1,21 @@
-pub mod argument_parser;
 pub mod component;
-pub mod epoch;
-pub mod fee_claim;
-pub mod hashing;
 pub mod metadata;
-pub mod serde_with;
-pub mod shard_id;
-pub mod substate;
-pub mod template;
-pub mod transaction;
-pub mod types;
 
 use std::str::FromStr;
 
 use component::{get_account_address_from_public_key, get_account_nft_address_from_public_key};
-use shard_id::ShardId;
-use substate::SubstateAddress;
 use tari_crypto::keys::{PublicKey, SecretKey};
 use tari_crypto::ristretto::{RistrettoPublicKey, RistrettoSecretKey};
 use tari_crypto::tari_utilities::hex::Hex;
 use tari_crypto::tari_utilities::ByteArray;
+use tari_dan_common_types::ShardId;
+use tari_engine_types::instruction::Instruction;
+use tari_engine_types::substate::SubstateAddress;
 use tari_template_lib::args;
 use tari_template_lib::prelude::{
     Amount, NonFungibleAddress, ResourceAddress, RistrettoPublicKeyBytes, TemplateAddress, NonFungibleId,
 };
-use transaction::instruction::Instruction;
-use transaction::transaction::Transaction;
+use tari_transaction::Transaction;
 use wasm_bindgen::prelude::*;
 
 fn ecdsa_to_ristretto_private_key(ecdsa_str: &str) -> Result<RistrettoSecretKey, JsError> {

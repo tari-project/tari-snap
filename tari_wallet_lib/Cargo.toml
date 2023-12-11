@@ -16,14 +16,18 @@ lto = true
 codegen-units = 1
 
 [dependencies]
-wasm-bindgen = "0.2"
-serde-wasm-bindgen = "0.6.0"
-console_error_panic_hook = "0.1"
-tari_crypto = { version = "0.19", features = ["borsh"] }
-thiserror = "1.0.49"
 tari_template_lib = { git="https://github.com/tari-project/tari-dan.git" }
 tari_template_abi = { git="https://github.com/tari-project/tari-dan.git" }
 tari_bor = { git="https://github.com/tari-project/tari-dan.git" }
+tari_transaction = { git="https://github.com/tari-project/tari-dan.git" }
+tari_engine_types = { git="https://github.com/tari-project/tari-dan.git" }
+tari_dan_common_types = { git="https://github.com/tari-project/tari-dan.git" }
+tari_crypto = { version = "0.19", features = ["borsh"] }
+
+wasm-bindgen = "0.2"
+serde-wasm-bindgen = "0.6.0"
+console_error_panic_hook = "0.1"
+thiserror = "1.0.49"
 digest = "0.10"
 newtype-ops = "0.1.4"
 serde = "1.0.126"
