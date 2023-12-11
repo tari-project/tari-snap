@@ -6,7 +6,7 @@ use tari_bor::BorTag;
 use serde::{Deserialize, Serialize};
 use tari_template_lib::{models::BinaryTag, Hash};
 
-use crate::hashing::{hasher, EngineHashDomainLabel};
+use crate::hashing::{EngineHashDomainLabel, hasher32};
 
 const TAG: u64 = BinaryTag::FeeClaim.as_u64();
 
@@ -19,7 +19,7 @@ impl FeeClaimAddress {
     }
 
     pub fn from_addr<TAddr: AsRef<[u8]>>(epoch: u64, addr: TAddr) -> Self {
-        let hash = hasher(EngineHashDomainLabel::FeeClaimAddress)
+        let hash = hasher32(EngineHashDomainLabel::FeeClaimAddress)
             .chain(&epoch)
             .chain(addr.as_ref())
             .result();

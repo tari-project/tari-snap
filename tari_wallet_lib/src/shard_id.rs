@@ -3,7 +3,7 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::{substate::SubstateAddress, hashing::{EngineHashDomainLabel, hasher}};
+use crate::{substate::SubstateAddress, hashing::{EngineHashDomainLabel, hasher32}};
 use crate::serde_with;
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash, Serialize, Deserialize)]
@@ -17,7 +17,7 @@ impl ShardId {
     }
 
     pub fn from_hash(hash: &[u8], version: u32) -> Self {
-        let new_addr = hasher(EngineHashDomainLabel::ShardId)
+        let new_addr = hasher32(EngineHashDomainLabel::ShardId)
             .chain(&hash)
             .chain(&version)
             .result();

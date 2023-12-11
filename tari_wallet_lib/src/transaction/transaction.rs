@@ -1,11 +1,12 @@
 use std::{fmt::Display, str::FromStr};
 use serde::{Deserialize, Serialize};
 use tari_template_lib::Hash;
+use crate::epoch::Epoch;
+use crate::hashing::hasher32;
 use crate::serde_with;
-use crate::{types::PublicKey, substate::SubstateAddress, hashing::{EngineHashDomainLabel, hasher}, shard_id::ShardId};
+use crate::{types::PublicKey, substate::SubstateAddress, hashing::{EngineHashDomainLabel}, shard_id::ShardId};
 
 use super::{signature::TransactionSignature, transaction_id::TransactionId, instruction::Instruction, builder::TransactionBuilder};
-
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Transaction {
@@ -19,10 +20,10 @@ pub struct Transaction {
     inputs: Vec<ShardId>,
     /// Input objects that must exist but cannot be downed by this transaction
     input_refs: Vec<ShardId>,
-    /// Output objects that will be created by this transaction
-    outputs: Vec<ShardId>,
-    /// Inputs filled by some authority. These are not part of the transaction hash. (TODO: Secure this somehow)
+    /// Inputs filled by some authority. These are not part of the transaction hash nor the signature
     filled_inputs: Vec<ShardId>,
+    min_epoch: Option<Epoch>,
+    max_epoch: Option<Epoch>,
 }
 
 impl Transaction {
@@ -36,8 +37,9 @@ impl Transaction {
         signature: TransactionSignature,
         inputs: Vec<ShardId>,
         input_refs: Vec<ShardId>,
-        outputs: Vec<ShardId>,
         filled_inputs: Vec<ShardId>,
+        min_epoch: Option<Epoch>,
+        max_epoch: Option<Epoch>,
     ) -> Self {
         let mut tx = Self {
             id: TransactionId::default(),
@@ -46,22 +48,26 @@ impl Transaction {
             signature,
             inputs,
             input_refs,
-            outputs,
             filled_inputs,
+            min_epoch,
+            max_epoch,
         };
-        tx.id = TransactionId::new(tx.calculate_hash().into_array());
+        tx.id = tx.calculate_hash();
         tx
     }
 
-    fn calculate_hash(&self) -> Hash {
-        hasher(EngineHashDomainLabel::Transaction)
+    fn calculate_hash(&self) -> TransactionId {
+        hasher32(EngineHashDomainLabel::Transaction)
             .chain(&self.signature)
             .chain(&self.fee_instructions)
             .chain(&self.instructions)
             .chain(&self.inputs)
             .chain(&self.input_refs)
-            .chain(&self.outputs)
+            .chain(&self.min_epoch)
+            .chain(&self.max_epoch)
             .result()
+            .into_array()
+            .into()
     }
 
     pub fn id(&self) -> &TransactionId {
@@ -89,15 +95,11 @@ impl Transaction {
     }
 
     pub fn involved_shards_iter(&self) -> impl Iterator<Item = &ShardId> + '_ {
-        self.inputs()
-            .iter()
-            .chain(self.input_refs())
-            .chain(self.outputs())
-            .chain(self.filled_inputs())
+        self.all_inputs_iter()
     }
 
     pub fn num_involved_shards(&self) -> usize {
-        self.inputs().len() + self.input_refs().len() + self.outputs().len() + self.filled_inputs().len()
+        self.inputs().len() + self.input_refs().len() + self.filled_inputs().len()
     }
 
     pub fn input_refs(&self) -> &[ShardId] {
@@ -128,12 +130,33 @@ impl Transaction {
         &mut self.filled_inputs
     }
 
-    pub fn outputs(&self) -> &[ShardId] {
-        &self.outputs
+    pub fn fee_claims(&self) -> impl Iterator<Item = (Epoch, PublicKey)> + '_ {
+        self.instructions()
+            .iter()
+            .chain(self.fee_instructions())
+            .filter_map(|instruction| {
+                if let Instruction::ClaimValidatorFees {
+                    epoch,
+                    validator_public_key,
+                } = instruction
+                {
+                    Some((Epoch(*epoch), validator_public_key.clone()))
+                } else {
+                    None
+                }
+            })
+    }
+
+    pub fn min_epoch(&self) -> Option<Epoch> {
+        self.min_epoch
+    }
+
+    pub fn max_epoch(&self) -> Option<Epoch> {
+        self.max_epoch
     }
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, Eq, PartialEq)]
 pub struct SubstateRequirement {
     #[serde(with = "serde_with::string")]
     address: SubstateAddress,

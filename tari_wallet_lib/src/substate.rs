@@ -1,4 +1,4 @@
-use crate::{serde_with, hashing::{EngineHashDomainLabel, hasher}, transaction::transaction_receipt::TransactionReceiptAddress, fee_claim::FeeClaimAddress};
+use crate::{serde_with, hashing::{EngineHashDomainLabel, hasher32}, transaction::transaction_receipt::TransactionReceiptAddress, fee_claim::FeeClaimAddress};
 use serde::{Deserialize, Serialize};
 use tari_bor::{encode, BorError, decode_exact};
 use std::{
@@ -62,16 +62,14 @@ impl SubstateAddress {
             SubstateAddress::Resource(address) => *address.hash(),
             SubstateAddress::Vault(id) => *id.hash(),
             SubstateAddress::UnclaimedConfidentialOutput(address) => *address.hash(),
-            SubstateAddress::NonFungible(address) => hasher(EngineHashDomainLabel::NonFungibleId)
+            SubstateAddress::NonFungible(address) => hasher32(EngineHashDomainLabel::NonFungibleId)
                 .chain(address.resource_address().hash())
                 .chain(address.id())
                 .result(),
-            SubstateAddress::NonFungibleIndex(address) => {
-                hasher(EngineHashDomainLabel::NonFungibleIndex)
-                    .chain(address.resource_address().hash())
-                    .chain(&address.index())
-                    .result()
-            }
+            SubstateAddress::NonFungibleIndex(address) => hasher32(EngineHashDomainLabel::NonFungibleIndex)
+                .chain(address.resource_address().hash())
+                .chain(&address.index())
+                .result(),
             SubstateAddress::TransactionReceipt(address) => *address.hash(),
             SubstateAddress::FeeClaim(address) => *address.hash(),
         }

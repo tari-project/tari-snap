@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use tari_crypto::tari_utilities::hex::Hex;
 use tari_template_lib::{
     args::{Arg, LogLevel},
-    models::{ComponentAddress, TemplateAddress}, prelude::Amount,
+    models::{ComponentAddress, TemplateAddress, Amount},
 };
 
 use crate::types::{PublicKey, ConfidentialClaim, ConfidentialOutput};
@@ -40,6 +40,7 @@ pub enum Instruction {
         epoch: u64,
         validator_public_key: PublicKey,
     },
+    DropAllProofsInWorkspace,
     CreateFreeTestCoins {
         revealed_amount: Amount,
         output: Option<ConfidentialOutput>,
@@ -95,6 +96,9 @@ impl Display for Instruction {
             },
             Self::CreateFreeTestCoins { .. } => {
                 write!(f, "CreateFreeTestCoins")
+            },
+            Self::DropAllProofsInWorkspace => {
+                write!(f, "DropAllProofsInWorkspace")
             },
         }
     }
