@@ -1,18 +1,18 @@
 {
-  "version": "0.1.0",
+  "version": "0.2.1",
   "description": "MetaMask snap for the Tari network",
   "proposedName": "Tari Snap",
   "repository": {
     "type": "git",
-    "url": "https://github.com/MetaMask/template-snap-monorepo.git"
+    "url": "https://github.com/tari-project/tari-snap.git"
   },
   "source": {
-    "shasum": "RVVDoZ8LOpPF6fZTweP8rYQpqtvroB9peru+uly804A=",
+    "shasum": "JxfUd0I/WevkBANdKFeiLewn19QVzPqz/HV/NCibW+o=",
     "location": {
       "npm": {
         "filePath": "dist/bundle.js",
         "iconPath": "images/icon.svg",
-        "packageName": "snap",
+        "packageName": "tarisnap",
         "registry": "https://registry.npmjs.org/"
       }
     }

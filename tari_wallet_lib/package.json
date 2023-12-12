@@ -1,7 +1,7 @@
 {
   "author": "You <you@example.com>",
   "name": "tari_wallet_lib",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "scripts": {
     "build": "rimraf dist pkg && webpack",
     "test": "cargo test && wasm-pack test --headless"
