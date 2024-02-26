@@ -8,9 +8,9 @@ use tari_crypto::keys::{PublicKey, SecretKey};
 use tari_crypto::ristretto::{RistrettoPublicKey, RistrettoSecretKey};
 use tari_crypto::tari_utilities::hex::Hex;
 use tari_crypto::tari_utilities::ByteArray;
-use tari_dan_common_types::ShardId;
+use tari_dan_common_types::SubstateAddress;
 use tari_engine_types::instruction::Instruction;
-use tari_engine_types::substate::SubstateAddress;
+use tari_engine_types::substate::SubstateId;
 use tari_template_lib::args;
 use tari_template_lib::prelude::{
     Amount, NonFungibleAddress, ResourceAddress, RistrettoPublicKeyBytes, TemplateAddress, NonFungibleId,
@@ -57,7 +57,7 @@ pub fn get_owner_token(public_key_hex: &str) -> Result<JsValue, JsError> {
         RistrettoPublicKeyBytes::from_bytes(public_key.as_bytes()).unwrap(),
     );
     let encoded_token = tari_bor::encode(&owner_token)?;
-    
+
     Ok(serde_wasm_bindgen::to_value(&encoded_token)?)
 }
 
@@ -84,15 +84,18 @@ pub fn encode_non_fungible_id(id_str: &str) -> Result<JsValue, JsError> {
 pub fn create_transaction(
     account_private_key_hex: &str,
     instructions_js: JsValue,
+    fee_instructions_js: JsValue,
     input_refs_js: JsValue,
 ) -> Result<JsValue, JsError> {
     let account_private_key = RistrettoSecretKey::from_hex(account_private_key_hex)
         .map_err(|e| JsError::new(&format!("Could not parse private key: {:?}", e)))?;
+    let fee_instructions: Vec<Instruction> = serde_wasm_bindgen::from_value(fee_instructions_js)?;
     let instructions: Vec<Instruction> = serde_wasm_bindgen::from_value(instructions_js)?;
-    let input_refs: Vec<ShardId> = serde_wasm_bindgen::from_value(input_refs_js)?;
+    let input_refs: Vec<SubstateAddress> = serde_wasm_bindgen::from_value(input_refs_js)?;
 
     let transaction = Transaction::builder()
-        .with_fee_instructions(instructions.to_vec())
+        .with_fee_instructions(fee_instructions.to_vec())
+        .with_instructions(instructions.to_vec())
         .with_input_refs(input_refs.to_vec())
         .sign(&account_private_key)
         .build();
@@ -156,8 +159,8 @@ pub fn create_transfer_transaction(
     });
 
     let resource_address_obj = ResourceAddress::from_str(resource_address)?;
-    let resource_substate = SubstateAddress::Resource(resource_address_obj);
-    let resource_shard_id = ShardId::from_address(&resource_substate, 0);
+    let resource_substate = SubstateId::Resource(resource_address_obj);
+    let resource_shard_id = SubstateAddress::from_address(&resource_substate, 0);
     let input_refs = vec![resource_shard_id];
 
     let transaction = Transaction::builder()
