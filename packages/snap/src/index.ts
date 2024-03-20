@@ -13,9 +13,10 @@ import {
   sendIndexerRequest,
   substateExists,
 } from './tari_indexer_client';
-import { getRistrettoKeyPair } from './keys';
+import { getRistrettoKeyPair, getRistrettoPublicKey } from './keys';
 import {
   GetFreeTestCoinsRequest,
+  GetRistrettoPublicKeyRequest,
   GetSubstateRequest,
   TransferRequest,
 } from './types';
@@ -305,9 +306,25 @@ async function getTemplateDefinition(
   request: JsonRpcRequest<Json[] | Record<string, Json>>,
 ) {
   const { template_address } = request.params as { template_address: string };
-  return await sendIndexerRequest( 'get_template_definition', {
+  return await sendIndexerRequest('get_template_definition', {
     template_address,
   });
+}
+
+/**
+ * Get the public key of the ristretto key pair at the given index
+ *
+ * @param req - The request object
+ */
+async function getRistrettoPublicKey(
+  req: JsonRpcRequest<Json[] | Record<string, Json>>,
+) {
+  const params = req.params as GetRistrettoPublicKeyRequest;
+  const keypair = await getRistrettoKeyPair(params.index);
+
+  return {
+    public_key: keypair.public_key,
+  };
 }
 
 /**
@@ -352,6 +369,8 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
       return getSubstateHandler(request);
     case 'getTemplateDefinition':
       return getTemplateDefinition(request);
+    case 'getPublicKey':
+      return getRistrettoPublicKey(request);
     default:
       throw new Error('Method not found.');
   }

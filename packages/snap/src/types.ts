@@ -1,8 +1,8 @@
 export type TransferRequest = {
-  amount: number,
-  resource_address: string,
-  destination_public_key: string,
-  fee: number,
+  amount: number;
+  resource_address: string;
+  destination_public_key: string;
+  fee: number;
 };
 
 export type GetFreeTestCoinsRequest = {
@@ -29,5 +29,9 @@ export type SendInstructionRequest = {
 };
 
 export type GetSubstateRequest = {
-  substate_address: string,
+  substate_address: string;
+};
+
+export type GetRistrettoPublicKeyRequest = {
+  index: number;
 };
