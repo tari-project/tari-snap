@@ -6,7 +6,7 @@ import { getRistrettoKeyPair } from './keys';
 import { SendInstructionRequest, SendTransactionRequest } from './types';
 
 export async function sendTransactionInternal(
-  wasm: tari_wallet_lib.InitOutput,
+  _wasm: tari_wallet_lib.InitOutput,
   request: SendTransactionRequest,
 ) {
   const {
@@ -26,13 +26,13 @@ export async function sendTransactionInternal(
         text(
           `This website requests a transaction from your account, do you want to proceed?.`,
         ),
-        text('**Fee Instructions:** ' + JSON.stringify(fee_instructions)),
-        text('**Instructions:** ' + JSON.stringify(instructions)),
+        text(`**Fee Instructions:** ${JSON.stringify(fee_instructions)}`),
+        text(`**Instructions:** ${JSON.stringify(instructions)}`),
       ]),
     },
   });
   if (!userConfirmation) {
-    return;
+    return null;
   }
 
   const accountIndex = 0;
@@ -48,17 +48,13 @@ export async function sendTransactionInternal(
 
   // send the transaction to the indexer
   const submit_method = 'submit_transaction';
-  let submit_params = {
+  const submit_params = {
     transaction,
     is_dry_run,
     required_substates,
   };
 
-  const res = await sendIndexerRequest(submit_method, submit_params);
-
-  // TODO: keep polling the indexer until we get a result for the transaction
-
-  return res;
+  return await sendIndexerRequest(submit_method, submit_params);
 }
 
 export async function sendTransaction(
@@ -83,7 +79,7 @@ export async function sendInstructionInternal(
   wasm: tari_wallet_lib.InitOutput,
   request: SendInstructionRequest,
 ) {
-  let {
+  const {
     instructions,
     input_refs,
     required_substates,
@@ -94,13 +90,14 @@ export async function sendInstructionInternal(
 
   if (dump_account) {
     // TODO: the instruction type should accept strings as well
-    let key = [97, 95, 98, 117, 99, 107, 101, 116];
+    const key = [97, 95, 98, 117, 99, 107, 101, 116];
 
     instructions.push({
       PutLastInstructionOutputOnWorkspace: {
         key,
       },
     });
+
     instructions.push({
       CallMethod: {
         component_address: dump_account,
@@ -111,16 +108,17 @@ export async function sendInstructionInternal(
   }
 
   // automatically add fee payment instruction at the end
-  instructions.push({
+  const fee_instructions = {
     CallMethod: {
       component_address: dump_account,
       method: 'pay_fee',
       args: [`Amount(${fee})`],
     },
-  });
+  } as any;
 
   const sendTransactionRequest: SendTransactionRequest = {
     instructions,
+    fee_instructions,
     input_refs,
     required_substates,
     is_dry_run,

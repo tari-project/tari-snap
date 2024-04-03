@@ -34,7 +34,10 @@ async function rawIndexerCall(method: string, params: object) {
 }
 
 export async function sendIndexerRequest(method: string, params: object) {
-  const { result } = await rawIndexerCall(method, params);
+  const { result, error } = await rawIndexerCall(method, params);
+  if (error) {
+    throw new Error(error.message);
+  }
   return result;
 }
 
@@ -44,8 +47,7 @@ export async function getSubstate(substate_address: string) {
     address: substate_address,
     version: null,
   };
-  const result = await rawIndexerCall(method, params);
-  return result;
+  return await sendIndexerRequest(method, params);
 }
 
 export async function substateExists(substate_address: string) {

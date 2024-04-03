@@ -13,7 +13,7 @@ import {
   sendIndexerRequest,
   substateExists,
 } from './tari_indexer_client';
-import { getRistrettoKeyPair, getRistrettoPublicKey } from './keys';
+import { getRistrettoKeyPair } from './keys';
 import {
   GetFreeTestCoinsRequest,
   GetRistrettoPublicKeyRequest,
@@ -26,6 +26,8 @@ import {
   sendTransaction,
 } from './transactions';
 import { mintAccountNft, transferNft } from './nfts';
+
+declare let snap: any;
 
 // Due to a bug of how brfs interacts with babel, we need to use require() syntax instead of import pattern
 // https://github.com/browserify/brfs/issues/39
@@ -60,7 +62,7 @@ const initializeWasm = async () => {
 };
 
 async function getAccountData(
-  request: JsonRpcRequest<Json[] | Record<string, Json>>,
+  _request: JsonRpcRequest<Json[] | Record<string, Json>>,
 ) {
   const accountIndex = 0;
   const { public_key } = await getRistrettoKeyPair(accountIndex);
@@ -73,59 +75,74 @@ async function getAccountData(
     // to get the latest version
     version: null,
   };
-  const result = await sendIndexerRequest('inspect_substate', params);
-  if (!result || !result.substate_contents) {
+  const result = await sendIndexerRequest('inspect_substate', params).catch(
+    (e) => {
+      console.error('Error getting account data:', e);
+      return null;
+    },
+  );
+  if (!result?.substate_contents) {
     return { public_key, address: component_address, resources: [] };
   }
-  const vaults = result.substate_contents.substate.Component.state.vaults;
+  const { vaults } = result.substate_contents.substate.Component.state;
 
-  const vault_ids = vaults.map((v: Object[]) => {
+  const vault_ids = vaults.map((v: object[]) => {
     return decode_vault_id(v[1]);
   });
 
   const resources = await Promise.all(
     vault_ids.map(async (v: any) => {
-      const result = await sendIndexerRequest('inspect_substate', {
+      const res = await sendIndexerRequest('inspect_substate', {
         address: v,
         version: null,
       });
 
-      const container =
-        result.substate_contents.substate.Vault.resource_container;
+      const { resource_container: container } =
+        res.substate_contents.substate.Vault;
 
       if (container.Confidential) {
         const data = container.Confidential;
         const resource_address = decode_resource_address(data.address);
         const balance = data.revealed_amount;
         return { type: 'confidential', resource_address, balance };
-      } else if (container.Fungible) {
+      }
+
+      if (container.Fungible) {
         const data = container.Fungible;
         const resource_address = decode_resource_address(data.address);
         const balance = data.amount;
         return { type: 'fungible', resource_address, balance };
-      } else if (container.NonFungible) {
+      }
+
+      if (container.NonFungible) {
         const data = container.NonFungible;
         const resource_address = decode_resource_address(data.address);
         const token_ids = data.token_ids.map((id) => {
-          if (id.U256) {
+          if ('U256' in id) {
             const hex = int_array_to_hex(id.U256);
             return `uuid:${hex}`;
-          } else if (id.String) {
-            return `str:${id.String}`;
-          } else if (id.Uint32) {
-            return `u32:${id.Uint32}`;
-          } else if (id.Uint64) {
-            return `u64:${id.Uint64}`;
-          } else {
-            // TODO: handle errors
-            return null;
           }
+
+          if ('String' in id) {
+            return `str:${id.String}`;
+          }
+
+          if ('Uint32' in id) {
+            return `u32:${id.Uint32}`;
+          }
+
+          if ('Uint64' in id) {
+            return `u64:${id.Uint64}`;
+          }
+
+          throw new Error(`Unknown token id type ${JSON.stringify(id)}`);
         });
         return { type: 'nonfungible', resource_address, token_ids };
-      } else {
-        // TODO: handle errors
-        return null;
       }
+
+      throw new Error(
+        `Unknown resource container type ${JSON.stringify(container)}`,
+      );
     }),
   );
 
@@ -147,15 +164,15 @@ async function transfer(
         text(
           `This website requests a transfer of funds from your account, do you want to proceed?.`,
         ),
-        text('**Destination:** ' + destination_public_key),
-        text('**Resource:** ' + resource_address),
-        text('**Amount:** ' + amount),
-        text('**Fee:** ' + fee),
+        text(`**Destination:** ${destination_public_key}`),
+        text(`**Resource:** ${resource_address}`),
+        text(`**Amount:** ${amount}`),
+        text(`**Fee:** ${fee}`),
       ]),
     },
   });
   if (!userConfirmation) {
-    return;
+    return null;
   }
 
   const accountIndex = 0;
@@ -182,7 +199,7 @@ async function transfer(
 
   // send the transaction to the indexer
   const submit_method = 'submit_transaction';
-  let submit_params = {
+  const submit_params = {
     transaction,
     is_dry_run: false,
     required_substates: [
@@ -203,15 +220,12 @@ async function transfer(
     });
   }
 
-  const res = await sendIndexerRequest(submit_method, submit_params);
-
   // TODO: keep polling the indexer until we get a result for the transaction
-
-  return res;
+  return await sendIndexerRequest(submit_method, submit_params);
 }
 
 async function getTransactions(
-  request: JsonRpcRequest<Json[] | Record<string, Json>>,
+  _request: JsonRpcRequest<Json[] | Record<string, Json>>,
 ) {
   const accountIndex = 0;
   const { public_key } = await getRistrettoKeyPair(accountIndex);
@@ -244,13 +258,13 @@ async function getFreeTestCoins(
         text(
           `This website requests a deposit of free test coins into your accout. Do you want to proceed?`,
         ),
-        text('**Amount:** ' + amount),
-        text('**Fee:** ' + fee),
+        text(`**Amount:** ${amount}`),
+        text(`**Fee:** ${fee}`),
       ]),
     },
   });
   if (!userConfirmation) {
-    return;
+    return null;
   }
 
   const accountIndex = 0;
@@ -258,8 +272,8 @@ async function getFreeTestCoins(
   const component_address =
     tari_wallet_lib.get_account_component_address(public_key);
 
-  let accountExists = await substateExists(component_address);
-  let is_new_account = !accountExists;
+  const accountExists = await substateExists(component_address);
+  const is_new_account = !accountExists;
 
   // build and sign transaction using the wasm lib
   const transaction = tari_wallet_lib.create_free_test_coins_transaction(
@@ -274,7 +288,7 @@ async function getFreeTestCoins(
   // send the transaction to the indexer
   // TODO: parameterize the indexer url
   const submit_method = 'submit_transaction';
-  const required_substates = [];
+  const required_substates = [] as any[];
   if (accountExists) {
     required_substates.push({
       address: account_component,
@@ -312,9 +326,10 @@ async function getTemplateDefinition(
 }
 
 /**
- * Get the public key of the ristretto key pair at the given index
+ * Get the public key of the Ristretto key pair at the given index
  *
- * @param req - The request object
+ * @param {object} req
+ * @returns {object} The public key of the ristretto key pair
  */
 async function getRistrettoPublicKey(
   req: JsonRpcRequest<Json[] | Record<string, Json>>,
@@ -372,6 +387,6 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
     case 'getPublicKey':
       return getRistrettoPublicKey(request);
     default:
-      throw new Error('Method not found.');
+      throw new Error(`Method '${request.method}' not found.`);
   }
 };
