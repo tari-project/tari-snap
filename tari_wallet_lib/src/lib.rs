@@ -8,14 +8,13 @@ use tari_crypto::keys::{PublicKey, SecretKey};
 use tari_crypto::ristretto::{RistrettoPublicKey, RistrettoSecretKey};
 use tari_crypto::tari_utilities::hex::Hex;
 use tari_crypto::tari_utilities::ByteArray;
-use tari_dan_common_types::SubstateAddress;
 use tari_engine_types::instruction::Instruction;
 use tari_engine_types::substate::SubstateId;
 use tari_template_lib::args;
 use tari_template_lib::prelude::{
     Amount, NonFungibleAddress, ResourceAddress, RistrettoPublicKeyBytes, TemplateAddress, NonFungibleId,
 };
-use tari_transaction::Transaction;
+use tari_transaction::{SubstateRequirement, Transaction};
 use wasm_bindgen::prelude::*;
 
 fn ecdsa_to_ristretto_private_key(ecdsa_str: &str) -> Result<RistrettoSecretKey, JsError> {
@@ -91,7 +90,7 @@ pub fn create_transaction(
         .map_err(|e| JsError::new(&format!("Could not parse private key: {:?}", e)))?;
     let fee_instructions: Vec<Instruction> = serde_wasm_bindgen::from_value(fee_instructions_js)?;
     let instructions: Vec<Instruction> = serde_wasm_bindgen::from_value(instructions_js)?;
-    let input_refs: Vec<SubstateAddress> = serde_wasm_bindgen::from_value(input_refs_js)?;
+    let input_refs: Vec<SubstateRequirement> = serde_wasm_bindgen::from_value(input_refs_js)?;
 
     let transaction = Transaction::builder()
         .with_fee_instructions(fee_instructions.to_vec())
@@ -160,7 +159,7 @@ pub fn create_transfer_transaction(
 
     let resource_address_obj = ResourceAddress::from_str(resource_address)?;
     let resource_substate = SubstateId::Resource(resource_address_obj);
-    let resource_shard_id = SubstateAddress::from_address(&resource_substate, 0);
+    let resource_shard_id = SubstateRequirement::new(resource_substate, None);
     let input_refs = vec![resource_shard_id];
 
     let transaction = Transaction::builder()
