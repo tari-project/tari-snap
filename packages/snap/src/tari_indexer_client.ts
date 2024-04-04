@@ -59,29 +59,3 @@ export async function substateExists(substate_address: string) {
 
   return false;
 }
-
-export function decode_resource_address(tagged: Object): string {
-  const int_array = extract_tagged_int_array(tagged);
-  const hex = int_array_to_hex(int_array);
-  return `resource_${hex}`;
-}
-
-export function decode_vault_id(tagged: Object): string {
-  const int_array = extract_tagged_int_array(tagged);
-  const hex = int_array_to_hex(int_array);
-  return `vault_${hex}`;
-}
-
-export function int_array_to_hex(int_array: number[]) {
-  return int_array
-    .map((i) => {
-      var h = i.toString(16);
-      return h.length % 2 ? '0' + h : h;
-    })
-    .join('');
-}
-
-export function extract_tagged_int_array(tagged: Object): number[] {
-  // position 0 is the binary tag and position 1 is the actual value
-  return tagged['@@TAGGED@@'][1];
-}

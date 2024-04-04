@@ -22,6 +22,9 @@ export async function getRistrettoKeyPair(
   const deriveTariKey = await getBIP44AddressKeyDeriver(entropy);
   const tariNode = await deriveTariKey(index);
   const ecdsaPrivateKey = tariNode.privateKey;
+  if (!ecdsaPrivateKey) {
+    throw new Error('Failed to derive private key');
+  }
 
   const secret_key =
     tari_wallet_lib.build_ristretto_private_key(ecdsaPrivateKey);

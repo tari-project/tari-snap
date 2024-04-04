@@ -4,12 +4,10 @@ import {
   OnRpcRequestHandler,
 } from '@metamask/snaps-types';
 import { heading, panel, text } from '@metamask/snaps-ui';
+import * as cbor from './cbor';
 import * as tari_wallet_lib from './tari_wallet_lib';
 import {
-  decode_resource_address,
-  decode_vault_id,
   getSubstate,
-  int_array_to_hex,
   sendIndexerRequest,
   substateExists,
 } from './tari_indexer_client';
@@ -70,81 +68,53 @@ async function getAccountData(
   const component_address =
     tari_wallet_lib.get_account_component_address(public_key);
 
-  const params = {
-    address: component_address,
-    // to get the latest version
-    version: null,
-  };
-  const result = await sendIndexerRequest('inspect_substate', params).catch(
-    (e) => {
-      console.error('Error getting account data:', e);
-      return null;
-    },
-  );
-  if (!result?.substate_contents) {
+  const result = await getSubstate(component_address).catch((e) => {
+    console.error('Error getting account data:', e);
+    return null;
+  });
+  if (!result?.substate) {
     return { public_key, address: component_address, resources: [] };
   }
-  const { vaults } = result.substate_contents.substate.Component.state;
 
-  const vault_ids = vaults.map((v: object[]) => {
-    return decode_vault_id(v[1]);
-  });
+  const vaults = cbor.getValueByPath(
+    result.substate.substate.Component.body.state,
+    '$.vaults',
+  );
+
+  const vault_ids = Object.values(vaults);
+
+  console.log(JSON.stringify(vault_ids, null, 2));
 
   const resources = await Promise.all(
     vault_ids.map(async (v: any) => {
-      const res = await sendIndexerRequest('inspect_substate', {
-        address: v,
-        version: null,
-      });
+      const res = await getSubstate(v);
 
-      const { resource_container: container } =
-        res.substate_contents.substate.Vault;
+      const { resource_container: container } = res.substate.substate.Vault;
 
       if (container.Confidential) {
-        const data = container.Confidential;
-        const resource_address = decode_resource_address(data.address);
-        const balance = data.revealed_amount;
+        const { address: resource_address, revealed_amount: balance } =
+          container.Confidential;
         return { type: 'confidential', resource_address, balance };
       }
 
       if (container.Fungible) {
-        const data = container.Fungible;
-        const resource_address = decode_resource_address(data.address);
-        const balance = data.amount;
+        const { address: resource_address, amount: balance } =
+          container.Fungible;
         return { type: 'fungible', resource_address, balance };
       }
 
       if (container.NonFungible) {
-        const data = container.NonFungible;
-        const resource_address = decode_resource_address(data.address);
-        const token_ids = data.token_ids.map((id) => {
-          if ('U256' in id) {
-            const hex = int_array_to_hex(id.U256);
-            return `uuid:${hex}`;
-          }
-
-          if ('String' in id) {
-            return `str:${id.String}`;
-          }
-
-          if ('Uint32' in id) {
-            return `u32:${id.Uint32}`;
-          }
-
-          if ('Uint64' in id) {
-            return `u64:${id.Uint64}`;
-          }
-
-          throw new Error(`Unknown token id type ${JSON.stringify(id)}`);
-        });
+        const { address: resource_address, token_ids } = container.NonFungible;
         return { type: 'nonfungible', resource_address, token_ids };
       }
 
-      throw new Error(
+      thrdow new Error(
         `Unknown resource container type ${JSON.stringify(container)}`,
       );
     }),
   );
+
+  console.log('resoutce', JSON.stringify(resources, null, 2));
 
   return { public_key, address: component_address, resources };
 }
@@ -328,8 +298,8 @@ async function getTemplateDefinition(
 /**
  * Get the public key of the Ristretto key pair at the given index
  *
- * @param {object} req
- * @returns {object} The public key of the ristretto key pair
+ * @param req
+ * @returns The public key of the ristretto key pair
  */
 async function getRistrettoPublicKey(
   req: JsonRpcRequest<Json[] | Record<string, Json>>,
