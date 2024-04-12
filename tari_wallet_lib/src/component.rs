@@ -2,7 +2,7 @@ use tari_crypto::ristretto::RistrettoPublicKey;
 use tari_crypto::tari_utilities::hex::Hex;
 use tari_engine_types::component::new_account_address_from_parts;
 use tari_template_builtin::{ACCOUNT_NFT_TEMPLATE_ADDRESS, ACCOUNT_TEMPLATE_ADDRESS};
-use tari_template_lib::{prelude::ComponentAddress, };
+use tari_template_lib::prelude::ComponentAddress;
 use wasm_bindgen::JsError;
 
 

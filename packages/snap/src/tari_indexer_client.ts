@@ -51,11 +51,15 @@ export async function getSubstate(substate_address: string) {
 }
 
 export async function substateExists(substate_address: string) {
-  const result = await getSubstate(substate_address);
+  try {
+    const result = await getSubstate(substate_address);
 
-  if (result && !result.error) {
-    return true;
+    if (result && !result.error) {
+      return true;
+    }
+
+    return false;
+  } catch (error) {
+    return false;
   }
-
-  return false;
 }

@@ -108,7 +108,7 @@ async function getAccountData(
         return { type: 'nonfungible', resource_address, token_ids };
       }
 
-      thrdow new Error(
+      throw new Error(
         `Unknown resource container type ${JSON.stringify(container)}`,
       );
     }),
@@ -252,6 +252,7 @@ async function getFreeTestCoins(
     BigInt(amount),
     BigInt(fee),
   );
+ 
   const account_component =
     tari_wallet_lib.get_account_component_address(public_key);
 

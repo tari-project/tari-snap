@@ -195,14 +195,9 @@ pub fn create_free_test_coins_transaction(
     ];
 
     if is_new_account {
-        let owner_token = NonFungibleAddress::from_public_key(
-            RistrettoPublicKeyBytes::from_bytes(account_public_key.as_bytes()).unwrap(),
-        );
-        let template_address: TemplateAddress = TemplateAddress::from_array([0; 32]);
-        instructions.push(Instruction::CallFunction {
-            template_address,
-            function: "create_with_bucket".to_string(),
-            args: args![owner_token, Workspace("free_test_coins")],
+        instructions.push(Instruction::CreateAccount {
+            owner_public_key: account_public_key.clone(),
+            workspace_bucket: Some("free_test_coins".to_string()),
         });
     } else {
         instructions.push(Instruction::CallMethod {
