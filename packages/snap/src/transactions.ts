@@ -108,13 +108,14 @@ export async function sendInstructionInternal(
   }
 
   // automatically add fee payment instruction at the end
-  const fee_instructions = {
+  const encoded_fee = await tari_wallet_lib.encode_amount(fee);
+  const fee_instructions = [{
     CallMethod: {
       component_address: dump_account,
       method: 'pay_fee',
-      args: [`Amount(${fee})`],
+      args: [{ Literal: encoded_fee }],
     },
-  } as any;
+  }];
 
   const sendTransactionRequest: SendTransactionRequest = {
     instructions,

@@ -80,6 +80,13 @@ pub fn encode_non_fungible_id(id_str: &str) -> Result<JsValue, JsError> {
 }
 
 #[wasm_bindgen]
+pub fn encode_amount(amount: i64) -> Result<JsValue, JsError> {
+    let amount = Amount::new(amount);
+    let encoded_amount = tari_bor::encode(&amount)?;
+    Ok(serde_wasm_bindgen::to_value(&encoded_amount)?)
+}
+
+#[wasm_bindgen]
 pub fn create_transaction(
     account_private_key_hex: &str,
     instructions_js: JsValue,

@@ -174,18 +174,18 @@ async function transfer(
     is_dry_run: false,
     required_substates: [
       {
-        address: account_component,
+        substate_id: account_component,
         version: null,
       },
       {
-        address: resource_address,
+        substate_id: resource_address,
         version: null,
       },
     ],
   };
   if (dest_account_exists) {
     submit_params.required_substates.push({
-      address: dest_account_component,
+      substate_id: dest_account_component,
       version: null,
     });
   }
@@ -262,7 +262,7 @@ async function getFreeTestCoins(
   const required_substates = [] as any[];
   if (accountExists) {
     required_substates.push({
-      address: account_component,
+      substate_id: account_component,
       version: null,
     });
   }

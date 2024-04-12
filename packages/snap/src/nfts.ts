@@ -48,10 +48,10 @@ export async function mintAccountNft(
 
   // include the input substates of the transaction (account and nft component)
   let required_substates = [
-    { address: account_component_address, version: null },
+    { substate_id: account_component_address, version: null },
   ];
   if (account_nft_exists) {
-    required_substates.push({ address: nft_component_address, version: null });
+    required_substates.push({ substate_id: nft_component_address, version: null });
   }
 
   // build and send the mint transaction
@@ -122,12 +122,12 @@ export async function transferNft(
 
   // include the input substates of the transaction
   let required_substates = [
-    { address: account_component_address, version: null },
-    { address: nft_address, version: null },
+    { substate_id: account_component_address, version: null },
+    { substate_id: nft_address, version: null },
   ];
   if (destination_account_exists) {
     required_substates.push({
-      address: destination_account_address,
+      substate_id: destination_account_address,
       version: null,
     });
   }
@@ -137,6 +137,7 @@ export async function transferNft(
     nft_resource,
   );
   const encoded_nft_id = await tari_wallet_lib.encode_non_fungible_id(nft_id);
+  const encoded_fee = await tari_wallet_lib.encode_amount(fee);
 
   // build and send the mint transaction
   // TODO: the instruction type should accept strings as well
@@ -167,7 +168,7 @@ export async function transferNft(
         CallMethod: {
           component_address: account_component_address,
           method: 'pay_fee',
-          args: [`Amount(${fee})`],
+          args: [{ Literal: encoded_fee }],
         },
       },
     ],
