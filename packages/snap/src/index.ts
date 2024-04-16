@@ -108,7 +108,7 @@ async function getAccountData(
         return { type: 'nonfungible', resource_address, token_ids };
       }
 
-      thrdow new Error(
+      throw new Error(
         `Unknown resource container type ${JSON.stringify(container)}`,
       );
     }),
