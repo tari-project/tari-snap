@@ -125,3 +125,19 @@ export function hex_to_int_array(hex_string: string) {
   const int_array = tokens.map(t => parseInt(t, 16));
   return int_array;
 }
+
+export function int_array_to_hex(byteArray: any) {
+  if (Array.isArray(byteArray)) {
+    return Array.from(byteArray, function(byte) {
+      return ("0" + (byte & 0xff).toString(16)).slice(-2);
+    }).join("");
+  }
+  if (byteArray === undefined) {
+    return "undefined";
+  }
+  // object might be a tagged object
+  if (byteArray["@@TAGGED@@"] !== undefined) {
+    return int_array_to_hex(byteArray["@@TAGGED@@"][1]);
+  }
+  return "Unsupported type";
+}
