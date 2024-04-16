@@ -3,7 +3,7 @@ pub mod metadata;
 
 use std::str::FromStr;
 
-use component::{get_account_address_from_public_key, get_account_nft_address_from_public_key};
+use component::get_account_address_from_public_key;
 use tari_crypto::keys::{PublicKey, SecretKey};
 use tari_crypto::ristretto::{RistrettoPublicKey, RistrettoSecretKey};
 use tari_crypto::tari_utilities::hex::Hex;
@@ -40,12 +40,6 @@ pub fn build_ristretto_public_key(ecdsa_str: &str) -> Result<String, JsError> {
 pub fn get_account_component_address(public_key: &str) -> Result<String, JsError> {
     let account_address = get_account_address_from_public_key(&public_key)?;
     Ok(account_address.to_string())
-}
-
-#[wasm_bindgen]
-pub fn get_account_nft_component_address(public_key: &str) -> Result<String, JsError> {
-    let account_nft_address = get_account_nft_address_from_public_key(&public_key)?;
-    Ok(account_nft_address.to_string())
 }
 
 #[wasm_bindgen]

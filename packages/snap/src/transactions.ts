@@ -5,6 +5,25 @@ import { sendIndexerRequest } from './tari_indexer_client';
 import { getRistrettoKeyPair } from './keys';
 import { SendInstructionRequest, SendTransactionRequest } from './types';
 
+const POLLING_INTERVAL_MILLIS = 500;
+const DEFAULT_WAIT_TIMEOUT_MILLIS = 10000;
+
+export async function waitForTransactionResult(transaction_id: string, timeout_millis = DEFAULT_WAIT_TIMEOUT_MILLIS ) {
+  let startTime = new Date().getTime();
+
+  while (new Date().getTime() < startTime + timeout_millis) {
+    await new Promise(resolve => setTimeout(resolve, POLLING_INTERVAL_MILLIS));
+    const response = await await sendIndexerRequest('get_transaction_result', {
+      transaction_id,
+    });
+    if(response.result && response.result.Finalized) {
+      return response.result.Finalized;
+    }
+  }
+
+  throw new Error(`Timeout waiting for transaction "${transaction_id}"`);
+}
+
 export async function sendTransactionInternal(
   _wasm: tari_wallet_lib.InitOutput,
   request: SendTransactionRequest,

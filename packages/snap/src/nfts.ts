@@ -6,6 +6,7 @@ import { SendInstructionRequest, SendTransactionRequest } from './types';
 import {
   sendInstructionInternal,
   sendTransactionInternal,
+  waitForTransactionResult,
 } from './transactions';
 
 const ACCOUNT_NFT_TEMPLATE =
@@ -18,6 +19,57 @@ export type MintAccountNftRequest = {
   fee: number;
 };
 
+async function createAccountNftComponent(wasm: tari_wallet_lib.InitOutput, fee: number) {
+  // send the transaction to create the account nft component
+  const accountIndex = 0;
+  const { public_key } = await getRistrettoKeyPair(accountIndex);
+  const account_component_address =
+    tari_wallet_lib.get_account_component_address(public_key);
+  const owner_token = await tari_wallet_lib.get_owner_token(public_key);
+  const encoded_fee = await tari_wallet_lib.encode_amount(fee);
+  let sendTransactionRequest: SendTransactionRequest = {
+    instructions: [
+      {
+        CallFunction: {
+          template_address: ACCOUNT_NFT_TEMPLATE,
+          function: 'create',
+          args: [{ Literal: owner_token }],
+        }
+      },
+    ],
+    fee_instructions: [
+      {
+        CallMethod: {
+          component_address: account_component_address,
+          method: 'pay_fee',
+          args: [{ Literal: encoded_fee }],
+        },
+      },
+    ],
+    input_refs: [],
+    required_substates: [{
+      substate_id: account_component_address,
+      version: null,
+    }],
+    is_dry_run: false,
+  };
+
+  // wait for the result of the account nft component
+  const { transaction_id } = await sendTransactionInternal(wasm, sendTransactionRequest);
+  const { execution_result } = await waitForTransactionResult(transaction_id);
+
+  // extract and return the account nft component address
+  let { up_substates } = execution_result.finalize.result.Accept;
+  for (let i = 0; i < up_substates.length; i++) {
+    const [id, substate] = up_substates[i];
+    if (id.Component && substate.substate.Component.template_address === ACCOUNT_NFT_TEMPLATE) {
+      return id.Component;
+    }
+  }
+
+  throw new Error("Account NFT component was not created");
+}
+
 export async function mintAccountNft(
   wasm: tari_wallet_lib.InitOutput,
   request: JsonRpcRequest<Json[] | Record<string, Json>>,
@@ -29,36 +81,19 @@ export async function mintAccountNft(
   const { public_key } = await getRistrettoKeyPair(accountIndex);
   const account_component_address =
     tari_wallet_lib.get_account_component_address(public_key);
-  const nft_component_address =
-    tari_wallet_lib.get_account_nft_component_address(public_key);
-  let instructions = [];
 
-  // create the NFT holding component if it does not exist already
-  let account_nft_exists = await substateExists(nft_component_address);
-  if (!account_nft_exists) {
-    const owner_token = await tari_wallet_lib.get_owner_token(public_key);
-    instructions.push({
-      CallFunction: {
-        template_address: ACCOUNT_NFT_TEMPLATE,
-        function: 'create',
-        args: [{ Literal: owner_token }],
-      },
-    });
-  }
+  let nft_component_address = await createAccountNftComponent(wasm, fee);
 
   // include the input substates of the transaction (account and nft component)
-  let required_substates = [
+  const required_substates = [
     { substate_id: account_component_address, version: null },
+    { substate_id: nft_component_address, version: null },
   ];
-  if (account_nft_exists) {
-    required_substates.push({ substate_id: nft_component_address, version: null });
-  }
 
   // build and send the mint transaction
   let encoded_metadata = tari_wallet_lib.encode_metadata(metadata);
   let sendInstructionRequest: SendInstructionRequest = {
     instructions: [
-      ...instructions,
       {
         CallMethod: {
           component_address: nft_component_address,
@@ -67,6 +102,7 @@ export async function mintAccountNft(
         },
       },
     ],
+    fee_instructions: [],
     input_refs: [],
     required_substates,
     is_dry_run: false,
