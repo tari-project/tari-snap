@@ -48,11 +48,12 @@ function Nfts() {
                 .map(res => {
                     const collection = res.resource_address;
                     const items = res.token_ids.map(id => {
-                        const id_str = int_array_to_hex(id.U256);
+                        const id_hex = int_array_to_hex(id.U256);
+                        const id_str = `uuid:${id_hex}`;
                         return {
-                            address: `${collection} nft_uuid:${id_str}`,
+                            address: `${collection} nft_${id_str}`,
                             collection,
-                            id
+                            id: id_str
                         }
                     });
                     return items;
