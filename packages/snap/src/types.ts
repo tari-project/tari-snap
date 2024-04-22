@@ -35,3 +35,10 @@ export type GetSubstateRequest = {
 export type GetRistrettoPublicKeyRequest = {
   index: number;
 };
+
+export type GetConfidentialVaultBalancesRequest = {
+  view_key_id: number;
+  vault_id: string;
+  minimum_expected_value: number | null;
+  maximum_expected_value: number | null;
+};

@@ -13,6 +13,7 @@ import {
 } from './tari_indexer_client';
 import { getRistrettoKeyPair } from './keys';
 import {
+  GetConfidentialVaultBalancesRequest,
   GetFreeTestCoinsRequest,
   GetRistrettoPublicKeyRequest,
   GetSubstateRequest,
@@ -313,6 +314,18 @@ async function getRistrettoPublicKey(
   };
 }
 
+async function getConfidentialVaultBalances(
+  req: JsonRpcRequest<Json[] | Record<string, Json>>,
+) {
+  const params = req.params as GetConfidentialVaultBalancesRequest;
+  const vault_substate = await getSubstate(params.vault_id);
+  const vault = vault_substate.substate.substate.Vault;
+  const keypair = await getRistrettoKeyPair(params.view_key_id);
+  const balances = tari_wallet_lib.view_vault_balance(vault, params.minimum_expected_value, params.maximum_expected_value, keypair.secret_key);
+
+  return balances;
+}
+
 /**
  * Handle incoming JSON-RPC requests, sent through `wallet_invokeSnap`.
  *
@@ -357,6 +370,8 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
       return getTemplateDefinition(request);
     case 'getPublicKey':
       return getRistrettoPublicKey(request);
+    case 'getConfidentialVaultBalances':
+      return getConfidentialVaultBalances(request);
     default:
       throw new Error(`Method '${request.method}' not found.`);
   }

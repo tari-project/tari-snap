@@ -1,15 +1,20 @@
 pub mod component;
+mod crypto;
 pub mod metadata;
 
+use std::collections::HashMap;
 use std::str::FromStr;
 
 use component::get_account_address_from_public_key;
+use crypto::AlwaysMissLookupTable;
 use tari_crypto::keys::{PublicKey, SecretKey};
 use tari_crypto::ristretto::{RistrettoPublicKey, RistrettoSecretKey};
 use tari_crypto::tari_utilities::hex::Hex;
 use tari_crypto::tari_utilities::ByteArray;
+use tari_engine_types::confidential::ElgamalVerifiableBalance;
 use tari_engine_types::instruction::Instruction;
 use tari_engine_types::substate::SubstateId;
+use tari_engine_types::vault::Vault;
 use tari_template_lib::args;
 use tari_template_lib::prelude::{
     Amount, NonFungibleAddress, ResourceAddress, RistrettoPublicKeyBytes, TemplateAddress, NonFungibleId,
@@ -221,4 +226,38 @@ pub fn create_free_test_coins_transaction(
         .build();
 
     Ok(serde_wasm_bindgen::to_value(&transaction)?)
+}
+
+#[wasm_bindgen]
+pub fn view_vault_balance(
+    vault_js: JsValue,
+    minimum_expected_value: Option<u64>,
+    maximum_expected_value: Option<u64>,
+    ecdsa_str: &str
+) -> Result<JsValue, JsError> {
+    let vault: Vault = serde_wasm_bindgen::from_value(vault_js)?;
+    let secret_view_key = ecdsa_to_ristretto_private_key(ecdsa_str)?;
+
+    #[allow(clippy::mutable_key_type)]
+    let commitments = vault
+        .get_confidential_commitments()
+        .ok_or_else(|| 
+            JsError::new(&format!("Vault dow not contain a confidential resource")))?;
+
+    let value_range = minimum_expected_value.unwrap_or(0)..=maximum_expected_value.unwrap_or(10_000_000_000);
+
+    let balances = ElgamalVerifiableBalance::batched_brute_force(
+        &secret_view_key,
+        value_range,
+        &mut AlwaysMissLookupTable,
+        commitments.values().filter_map(|output| output.viewable_balance.as_ref()),
+    )?;
+
+    let result: HashMap<String, Option<u64>> = commitments
+            .keys()
+            .map(|c| c.as_public_key().to_string())
+            .zip(balances.clone())
+            .collect();
+    
+    Ok(serde_wasm_bindgen::to_value(&result)?)        
 }
