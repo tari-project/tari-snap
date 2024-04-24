@@ -11,7 +11,7 @@ import { ReceiveDialog } from '../ReceiveDialog';
 import IconButton from '@mui/material/IconButton';
 import { copyToCliboard, truncateText } from '../../utils/text';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import { getAccountData, getSubstate } from '../../utils/snap';
+import { getAccountData, getSubstate, int_array_to_hex } from '../../utils/snap';
 import Grid from '@mui/material/Grid';
 import { MintDialog } from '../MintDialog';
 import StartIcon from '@mui/icons-material/Start';
@@ -48,10 +48,12 @@ function Nfts() {
                 .map(res => {
                     const collection = res.resource_address;
                     const items = res.token_ids.map(id => {
+                        const id_hex = int_array_to_hex(id.U256);
+                        const id_str = `uuid:${id_hex}`;
                         return {
-                            address: `${collection} nft_${id}`,
+                            address: `${collection} nft_${id_str}`,
                             collection,
-                            id
+                            id: id_str
                         }
                     });
                     return items;
@@ -67,10 +69,14 @@ function Nfts() {
             }));
 
             const substates = nft_contents
-                .filter(nft => nft.content.result)
+                .filter(nft => nft.content.substate)
                 .map(nft => {
-                    //const address = content.result.address;
-                    const metadata = nft.content.result.substate_contents.substate.NonFungible.data['@@TAGGED@@'][1];
+                    const metadata_map = nft.content.substate.substate.NonFungible.data.Tag[1].Map;
+                    let metadata = {};
+                    metadata_map.map((entry) => {
+                        metadata[entry[0].Text] = entry[1].Text;
+                    });
+
                     return { ...nft, metadata };
                 });
 
