@@ -25,7 +25,6 @@ tari_crypto = { version = "0.20", features = ["borsh"] }
 tari_dan_wallet_crypto = { git = "https://github.com/tari-project/tari-dan.git", branch = "development" }
 tari_dan_wallet_sdk = { git = "https://github.com/tari-project/tari-dan.git", branch = "development" }
 tari_common_types = { git = "https://github.com/tari-project/tari.git", branch = "feature-dan2" }
-
 wasm-bindgen = "0.2"
 serde-wasm-bindgen = "0.6.0"
 serde = "1.0.126"

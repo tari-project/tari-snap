@@ -1,13 +1,13 @@
 use std::convert::TryFrom;
 
-use tari_crypto::ristretto::{RistrettoPublicKey, RistrettoSecretKey};
-use tari_dan_wallet_crypto::{create_withdraw_proof, ConfidentialOutputMaskAndValue, ConfidentialProofStatement};
-use tari_dan_wallet_sdk::{apis::confidential_transfer::ConfidentialTransferInputSelection, models::ConfidentialProofId};
-use tari_engine_types::{resource::Resource, substate::SubstateId, vault::Vault};
-use tari_template_lib::{args, models::{Amount, ComponentAddress, ResourceAddress}};
+use tari_crypto::{commitment, ristretto::{RistrettoPublicKey, RistrettoSecretKey}, tari_utilities::hex::Hex};
+use tari_dan_wallet_crypto::{create_withdraw_proof, extract_value_and_mask, kdfs, unblind_output, ConfidentialOutputMaskAndValue, ConfidentialProofStatement};
+use tari_dan_wallet_sdk::{apis::{confidential_transfer::ConfidentialTransferInputSelection, key_manager}, models::{ConfidentialOutputModel, ConfidentialProofId, OutputStatus}};
+use tari_engine_types::{confidential::ConfidentialOutput, resource::Resource, substate::SubstateId, vault::Vault};
+use tari_template_lib::{args, models::{Amount, ComponentAddress, EncryptedData, ResourceAddress, VaultId}};
 use tari_transaction::{Instruction, SubstateRequirement, Transaction};
-use wasm_bindgen::{JsError, JsValue};
-use tari_common_types::types::PublicKey;
+use wasm_bindgen::{JsError, JsValue, UnwrapThrowExt};
+use tari_common_types::types::{Commitment, PublicKey};
 
 #[derive(Debug)]
 struct InputsToSpend {
@@ -31,6 +31,7 @@ pub struct ConfidentialTransferParams {
     pub source_private_key: RistrettoSecretKey,
     pub source_public_key: RistrettoPublicKey,
     pub source_account_address: ComponentAddress,
+    pub source_vault_id: VaultId,
     pub source_vault: Vault,
     pub destination_public_key: RistrettoPublicKey,
     pub destination_account_address: ComponentAddress,
@@ -64,13 +65,153 @@ impl ConfidentialTransferParams {
 
 
 fn resolved_inputs_for_transfer(
-    _src_vault: Vault,
-    _from_account: ComponentAddress,
+    vault_address: SubstateId,
+    src_vault: Vault,
+    from_account: ComponentAddress,
+    key: &RistrettoSecretKey,
     _resource_address: ResourceAddress,
-    _spend_amount: Amount,
-    _input_selection: ConfidentialTransferInputSelection,
+    spend_amount: Amount,
+    input_selection: ConfidentialTransferInputSelection,
 ) -> Result<InputsToSpend, JsError> {
-    todo!()
+    // TODO: should we implement other types of input selection?
+    match &input_selection {
+        ConfidentialTransferInputSelection::ConfidentialOnly => {
+            let (confidential_inputs, _) = get_confidential_amount_from_vault(SubstateId::Component(from_account), vault_address, &src_vault, key, spend_amount)?;
+            let confidential_inputs = resolve_output_masks(key, confidential_inputs, key_manager::TRANSACTION_BRANCH)?;
+
+            Ok(InputsToSpend {
+                confidential: confidential_inputs,
+                proof_id: 0,
+                revealed: Amount::zero(),
+            })
+        },
+        ConfidentialTransferInputSelection::RevealedOnly => {
+            todo!()
+        },
+        ConfidentialTransferInputSelection::PreferRevealed => {
+            todo!()
+        },
+        ConfidentialTransferInputSelection::PreferConfidential => {
+            todo!()
+        },
+    }
+}
+
+fn get_confidential_amount_from_vault(
+    account_address: SubstateId,
+    vault_address: SubstateId,
+    vault: &Vault,
+    key: &RistrettoSecretKey,
+    amount: Amount,
+) -> Result<(Vec<ConfidentialOutputModel>, u64), JsError> {
+    if amount.is_negative() {
+        return Err(JsError::new("Amount cannot be negative"));
+    }
+    let amount = amount.as_u64_checked().unwrap();
+    let mut total_output_amount = 0;
+    let mut outputs = Vec::new();
+
+    let mut vault_outputs = get_confidential_outpus_from_vault(account_address, vault_address, vault, key)?;
+
+    while total_output_amount < amount {
+        let output =
+            vault_outputs.pop();
+        match output {
+            Some(output) => {
+                total_output_amount += output.value;
+                outputs.push(output);
+            },
+            None => {
+                break;
+            }            
+        }
+    }
+
+    Ok((outputs, total_output_amount))
+}
+
+fn get_confidential_outpus_from_vault(account_address: SubstateId, vault_address: SubstateId, vault: &Vault, key: &RistrettoSecretKey) -> Result<Vec<ConfidentialOutputModel>, JsError> {
+    let commitments = vault.get_confidential_commitments()
+        .ok_or(JsError::new(&format!("No confidential commitments in the vault")))?;
+    let outputs: Vec<ConfidentialOutput> = commitments.values().cloned().collect();
+
+    // extract value from each commitment and build the ConfidentialOutputModel
+    let mut result = vec![];
+    for output in outputs {
+        let unblinded_result = unblind_output(
+            &output.commitment,
+            &output.encrypted_data,
+            key,
+            &output.stealth_public_nonce,
+            );
+
+        let (value, status) = match unblinded_result {
+            Ok(output) => (output.value, OutputStatus::Unspent),
+            Err(_) => {
+                (0, OutputStatus::Invalid)
+            },
+        };
+
+        result.push(ConfidentialOutputModel {
+            account_address: account_address.clone(),
+            vault_address: vault_address.clone(),
+            commitment: output.commitment.clone(),
+            value,
+            sender_public_nonce: Some(output.stealth_public_nonce.clone()),
+            // TODO: this field is used somewhere?
+            encryption_secret_key_index: 0_u64,
+            encrypted_data: output.encrypted_data.clone(),
+            public_asset_tag: None,
+            status,
+            locked_by_proof: None,
+        });
+    }
+
+    // sort by descending value
+    result.sort_by(|a, b| a.value.cmp(&b.value));
+    Ok(result)
+}
+
+fn resolve_output_masks(
+    account_key: &RistrettoSecretKey,
+    outputs: Vec<ConfidentialOutputModel>,
+    key_branch: &str,
+) -> Result<Vec<ConfidentialOutputMaskAndValue>, JsError> {
+    let mut outputs_with_masks = Vec::with_capacity(outputs.len());
+    for output in outputs {
+        let output_key =
+            derive_key(account_key, key_branch, output.encryption_secret_key_index)?;
+        // Either derive the mask from the sender's public nonce or from the local key manager
+        let shared_decrypt_key = match output.sender_public_nonce {
+            Some(nonce) => {
+                // Derive shared secret
+                kdfs::encrypted_data_dh_kdf_aead(&output_key, &nonce)
+            },
+            None => {
+                // Derive local secret
+                let output_key = 
+                    derive_key(account_key, key_branch, output.encryption_secret_key_index)?;
+                output_key
+            },
+        };
+
+        let (_, mask) = extract_value_and_mask(
+            &shared_decrypt_key,
+            &output.commitment,
+            &output.encrypted_data,
+        )?;
+
+        outputs_with_masks.push(ConfidentialOutputMaskAndValue {
+            value: output.value,
+            mask,
+        });
+    }
+    Ok(outputs_with_masks)
+}
+
+fn derive_key(account_key: &RistrettoSecretKey, _branch: &str, _index: u64) -> Result<RistrettoSecretKey, JsError> {
+    //TODO: this is not safe, we must implement a key derivation for the snap
+    Ok(account_key.clone())
 }
 
 fn create_confidential_proof_statement(
@@ -98,8 +239,10 @@ pub fn build_confidential_transfer_transaction(
     let revealed_amount = params.revealed_amount();
 
     let inputs_to_spend = resolved_inputs_for_transfer(
+        SubstateId::Vault(params.source_vault_id),
         params.source_vault,
         params.source_account_address,
+        &params.source_private_key,
         params.resource_address,
         Amount::new(params.amount),
         params.input_selection,

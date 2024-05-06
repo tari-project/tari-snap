@@ -20,6 +20,7 @@ use tari_engine_types::resource::Resource;
 use tari_engine_types::substate::SubstateId;
 use tari_engine_types::vault::Vault;
 use tari_template_lib::args;
+use tari_template_lib::models::VaultId;
 use tari_template_lib::prelude::{
     Amount, NonFungibleAddress, ResourceAddress, RistrettoPublicKeyBytes, NonFungibleId,
 };
@@ -179,6 +180,7 @@ pub fn create_transfer_transaction(
 #[wasm_bindgen]
 pub fn create_confidential_transfer_transaction(
     source_private_key: &str,
+    source_vault_id: &str,
     source_vault_js: JsValue,
     destination_public_key_hex: &str,
     create_destination_account: bool,
@@ -202,6 +204,7 @@ pub fn create_confidential_transfer_transaction(
     let resource_address = ResourceAddress::from_str(resource_address)?;
     let proof_from_resource = proof_from_resource.map(|s| ResourceAddress::from_str(&s)).transpose()?;
 
+    let source_vault_id = VaultId::from_str(source_vault_id)?;
     let source_vault: Vault = serde_wasm_bindgen::from_value(source_vault_js)?;
     let resource_substate: Resource = serde_wasm_bindgen::from_value(resource_substate_js)?;
     let input_selection: ConfidentialTransferInputSelection = serde_wasm_bindgen::from_value(input_selection_js)?;
@@ -221,6 +224,7 @@ pub fn create_confidential_transfer_transaction(
         source_vault,
         resource_substate,
         input_selection,
+        source_vault_id,
     };
 
     Ok(build_confidential_transfer_transaction(params)?)
