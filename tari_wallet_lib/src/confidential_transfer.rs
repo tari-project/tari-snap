@@ -1,13 +1,14 @@
 use std::convert::TryFrom;
 
-use tari_crypto::{commitment, ristretto::{RistrettoPublicKey, RistrettoSecretKey}, tari_utilities::hex::Hex};
-use tari_dan_wallet_crypto::{create_withdraw_proof, extract_value_and_mask, kdfs, unblind_output, ConfidentialOutputMaskAndValue, ConfidentialProofStatement};
+use rand::rngs::OsRng;
+use tari_crypto::{commitment, keys::PublicKey, ristretto::{RistrettoPublicKey, RistrettoSecretKey}, tari_utilities::hex::Hex};
+use tari_dan_wallet_crypto::{create_withdraw_proof, encrypt_value_and_mask, extract_value_and_mask, kdfs, unblind_output, ConfidentialOutputMaskAndValue, ConfidentialProofStatement};
 use tari_dan_wallet_sdk::{apis::{confidential_transfer::ConfidentialTransferInputSelection, key_manager}, models::{ConfidentialOutputModel, ConfidentialProofId, OutputStatus}};
 use tari_engine_types::{confidential::ConfidentialOutput, resource::Resource, substate::SubstateId, vault::Vault};
 use tari_template_lib::{args, models::{Amount, ComponentAddress, EncryptedData, ResourceAddress, VaultId}};
 use tari_transaction::{Instruction, SubstateRequirement, Transaction};
 use wasm_bindgen::{JsError, JsValue, UnwrapThrowExt};
-use tari_common_types::types::{Commitment, PublicKey};
+use tari_common_types::types::{Commitment, PrivateKey};
 
 #[derive(Debug)]
 struct InputsToSpend {
@@ -214,17 +215,43 @@ fn derive_key(account_key: &RistrettoSecretKey, _branch: &str, _index: u64) -> R
     Ok(account_key.clone())
 }
 
-fn create_confidential_proof_statement(
-    _dest_public_key: &PublicKey,
-    _confidential_amount: Amount,
-    _reveal_amount: Amount,
-    _resource_view_key: Option<PublicKey>,
-) -> Result<ConfidentialProofStatement, JsError> {
-    todo!()
+pub fn next_key(account_key: &RistrettoSecretKey, _branch: &str) -> Result<RistrettoSecretKey, JsError> {
+    //TODO: this is not safe, we must implement a key derivation for the snap
+    Ok(account_key.clone())
 }
 
-fn create_change_statement() -> Result<ConfidentialProofStatement, JsError> {
-    todo!()
+fn create_confidential_proof_statement(
+    account_key: &RistrettoSecretKey,
+    dest_public_key: &RistrettoPublicKey,
+    confidential_amount: Amount,
+    reveal_amount: Amount,
+    resource_view_key: Option<RistrettoPublicKey>,
+) -> Result<ConfidentialProofStatement, JsError> {
+    let mask = if confidential_amount.is_zero() {
+        PrivateKey::default()
+    } else {
+        next_key(account_key, key_manager::TRANSACTION_BRANCH)?
+    };
+
+    let (nonce, public_nonce) = PublicKey::random_keypair(&mut OsRng);
+    let encrypted_data = encrypt_value_and_mask(
+        confidential_amount
+            .as_u64_checked()
+            .unwrap_or_else(|| panic!("BUG: confidential_amount {} is negative", confidential_amount)),
+        &mask,
+        dest_public_key,
+        &nonce,
+    )?;
+
+    Ok(ConfidentialProofStatement {
+        amount: confidential_amount,
+        mask,
+        sender_public_nonce: public_nonce,
+        encrypted_data,
+        minimum_value_promise: 0,
+        reveal_amount,
+        resource_view_key,
+    })
 }
 
 pub fn build_confidential_transfer_transaction(
@@ -251,6 +278,7 @@ pub fn build_confidential_transfer_transaction(
     let resource_view_key = params.resource_substate.view_key().cloned();
 
     let output_statement = create_confidential_proof_statement(
+        &params.source_private_key,
         &params.destination_public_key,
         confidential_amount,
         revealed_amount,
@@ -267,7 +295,15 @@ pub fn build_confidential_transfer_transaction(
     let maybe_change_statement = if change_confidential_amount.is_zero() {
         None
     } else {
-        Some(create_change_statement()?)
+        let statement = create_confidential_proof_statement(
+            &params.source_private_key,
+            &params.source_public_key,
+            change_confidential_amount,
+            Amount::zero(),
+            resource_view_key,
+        )?;
+    
+        Some(statement)
     };
 
     let proof = create_withdraw_proof(
