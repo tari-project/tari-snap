@@ -7,12 +7,12 @@
     "url": "https://github.com/tari-project/tari-snap.git"
   },
   "source": {
-    "shasum": "bSvhF9tZ+PLR9Z0StQ1GYl5gdG9oFFfc2h3NTGz6hw0=",
+    "shasum": "TK61mYSRYVBwz/SrcmfxI35JVTrCQcBHiK6eFKyp6Rk=",
     "location": {
       "npm": {
         "filePath": "dist/bundle.js",
         "iconPath": "images/icon.svg",
-        "packageName": "tarisnap",
+        "packageName": "@tariproject/tarisnap",
         "registry": "https://registry.npmjs.org/"
       }
     }

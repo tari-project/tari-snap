@@ -1,5 +1,5 @@
 {
-  "name": "tarisnap",
+  "name": "@tariproject/tarisnap",
   "version": "0.2.1",
   "description": "Tari MetaMask Snap",
   "repository": {
