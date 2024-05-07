@@ -1,14 +1,16 @@
 use std::convert::TryFrom;
 
 use rand::rngs::OsRng;
-use tari_crypto::{commitment, keys::PublicKey, ristretto::{RistrettoPublicKey, RistrettoSecretKey}, tari_utilities::hex::Hex};
+use tari_crypto::ristretto::{RistrettoPublicKey, RistrettoSecretKey};
 use tari_dan_wallet_crypto::{create_withdraw_proof, encrypt_value_and_mask, extract_value_and_mask, kdfs, unblind_output, ConfidentialOutputMaskAndValue, ConfidentialProofStatement};
-use tari_dan_wallet_sdk::{apis::{confidential_transfer::ConfidentialTransferInputSelection, key_manager}, models::{ConfidentialOutputModel, ConfidentialProofId, OutputStatus}};
 use tari_engine_types::{confidential::ConfidentialOutput, resource::Resource, substate::SubstateId, vault::Vault};
 use tari_template_lib::{args, models::{Amount, ComponentAddress, EncryptedData, ResourceAddress, VaultId}};
 use tari_transaction::{Instruction, SubstateRequirement, Transaction};
-use wasm_bindgen::{JsError, JsValue, UnwrapThrowExt};
-use tari_common_types::types::{Commitment, PrivateKey};
+use wasm_bindgen::{JsError, JsValue};
+use tari_common_types::types::{Commitment, PrivateKey, PublicKey};
+use tari_crypto::keys::PublicKey as _;
+
+pub type ConfidentialProofId = u64;
 
 #[derive(Debug)]
 struct InputsToSpend {
@@ -26,6 +28,45 @@ impl InputsToSpend {
         let confidential_amt = self.confidential.iter().map(|o| o.value).sum::<u64>();
         Amount::try_from(confidential_amt).unwrap()
     }
+}
+
+#[derive(Debug, Clone, Copy, serde::Serialize, serde::Deserialize)]
+pub enum ConfidentialTransferInputSelection {
+    ConfidentialOnly,
+    RevealedOnly,
+    PreferRevealed,
+    PreferConfidential,
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct ConfidentialOutputModel {
+    pub account_address: SubstateId,
+    pub vault_address: SubstateId,
+    pub commitment: Commitment,
+    pub value: u64,
+    pub sender_public_nonce: Option<PublicKey>,
+    pub encryption_secret_key_index: u64,
+    pub encrypted_data: EncryptedData,
+    pub public_asset_tag: Option<PublicKey>,
+    pub status: OutputStatus,
+    pub locked_by_proof: Option<ConfidentialProofId>,
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub enum OutputStatus {
+    /// The output is available for spending
+    Unspent,
+    /// The output has been spent.
+    Spent,
+    /// The output is locked for spending. Once the transaction has been accepted, this output becomes Spent.
+    Locked,
+    /// The output is locked as an unconfirmed output. Once the transaction has been accepted, this output becomes
+    /// Unspent.
+    LockedUnconfirmed,
+    /// This output existing in the vault but could not be validated successfully, meaning the encrypted value and/or
+    /// mask were not constructed correctly by the sender. This output will not "be counted" in the confidential
+    /// balance.
+    Invalid,
 }
 
 pub struct ConfidentialTransferParams {
@@ -78,7 +119,7 @@ fn resolved_inputs_for_transfer(
     match &input_selection {
         ConfidentialTransferInputSelection::ConfidentialOnly => {
             let (confidential_inputs, _) = get_confidential_amount_from_vault(SubstateId::Component(from_account), vault_address, &src_vault, key, spend_amount)?;
-            let confidential_inputs = resolve_output_masks(key, confidential_inputs, key_manager::TRANSACTION_BRANCH)?;
+            let confidential_inputs = resolve_output_masks(key, confidential_inputs)?;
 
             Ok(InputsToSpend {
                 confidential: confidential_inputs,
@@ -176,12 +217,11 @@ fn get_confidential_outpus_from_vault(account_address: SubstateId, vault_address
 fn resolve_output_masks(
     account_key: &RistrettoSecretKey,
     outputs: Vec<ConfidentialOutputModel>,
-    key_branch: &str,
 ) -> Result<Vec<ConfidentialOutputMaskAndValue>, JsError> {
     let mut outputs_with_masks = Vec::with_capacity(outputs.len());
     for output in outputs {
         let output_key =
-            derive_key(account_key, key_branch, output.encryption_secret_key_index)?;
+            derive_key(account_key, output.encryption_secret_key_index)?;
         // Either derive the mask from the sender's public nonce or from the local key manager
         let shared_decrypt_key = match output.sender_public_nonce {
             Some(nonce) => {
@@ -191,7 +231,7 @@ fn resolve_output_masks(
             None => {
                 // Derive local secret
                 let output_key = 
-                    derive_key(account_key, key_branch, output.encryption_secret_key_index)?;
+                    derive_key(account_key, output.encryption_secret_key_index)?;
                 output_key
             },
         };
@@ -210,12 +250,12 @@ fn resolve_output_masks(
     Ok(outputs_with_masks)
 }
 
-fn derive_key(account_key: &RistrettoSecretKey, _branch: &str, _index: u64) -> Result<RistrettoSecretKey, JsError> {
+fn derive_key(account_key: &RistrettoSecretKey, _index: u64) -> Result<RistrettoSecretKey, JsError> {
     //TODO: this is not safe, we must implement a key derivation for the snap
     Ok(account_key.clone())
 }
 
-pub fn next_key(account_key: &RistrettoSecretKey, _branch: &str) -> Result<RistrettoSecretKey, JsError> {
+pub fn next_key(account_key: &RistrettoSecretKey) -> Result<RistrettoSecretKey, JsError> {
     //TODO: this is not safe, we must implement a key derivation for the snap
     Ok(account_key.clone())
 }
@@ -230,7 +270,7 @@ fn create_confidential_proof_statement(
     let mask = if confidential_amount.is_zero() {
         PrivateKey::default()
     } else {
-        next_key(account_key, key_manager::TRANSACTION_BRANCH)?
+        next_key(account_key)?
     };
 
     let (nonce, public_nonce) = PublicKey::random_keypair(&mut OsRng);

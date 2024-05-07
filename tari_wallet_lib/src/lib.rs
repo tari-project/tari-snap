@@ -7,13 +7,12 @@ use std::collections::HashMap;
 use std::str::FromStr;
 
 use component::get_account_address_from_public_key;
-use confidential_transfer::{build_confidential_transfer_transaction, ConfidentialTransferParams};
+use confidential_transfer::{build_confidential_transfer_transaction, ConfidentialTransferInputSelection, ConfidentialTransferParams};
 use crypto::AlwaysMissLookupTable;
 use tari_crypto::keys::{PublicKey, SecretKey};
 use tari_crypto::ristretto::{RistrettoPublicKey, RistrettoSecretKey};
 use tari_crypto::tari_utilities::hex::Hex;
 use tari_crypto::tari_utilities::ByteArray;
-use tari_dan_wallet_sdk::apis::confidential_transfer::ConfidentialTransferInputSelection;
 use tari_engine_types::confidential::ElgamalVerifiableBalance;
 use tari_engine_types::instruction::Instruction;
 use tari_engine_types::resource::Resource;
