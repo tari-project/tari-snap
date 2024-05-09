@@ -5,6 +5,13 @@ export type TransferRequest = {
   fee: number;
 };
 
+export type ConfidentialTransferRequest = {
+  amount: number;
+  resource_address: string;
+  destination_public_key: string;
+  fee: number;
+};
+
 export type GetFreeTestCoinsRequest = {
   amount: number;
   fee: number;

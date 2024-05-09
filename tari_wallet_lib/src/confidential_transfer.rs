@@ -69,6 +69,7 @@ pub enum OutputStatus {
     Invalid,
 }
 
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct ConfidentialTransferParams {
     pub source_private_key: RistrettoSecretKey,
     pub source_public_key: RistrettoPublicKey,
@@ -273,7 +274,7 @@ fn create_confidential_proof_statement(
         next_key(account_key)?
     };
 
-    let (nonce, public_nonce) = PublicKey::random_keypair(&mut OsRng);
+    let (nonce, public_nonce) = PublicKey::random_keypair(&mut rand::thread_rng());  
     let encrypted_data = encrypt_value_and_mask(
         confidential_amount
             .as_u64_checked()

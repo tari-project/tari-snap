@@ -13,6 +13,7 @@ import {
 } from './tari_indexer_client';
 import { getRistrettoKeyPair } from './keys';
 import {
+  ConfidentialTransferRequest,
   GetConfidentialVaultBalancesRequest,
   GetFreeTestCoinsRequest,
   GetRistrettoPublicKeyRequest,
@@ -165,6 +166,130 @@ async function transfer(
     BigInt(amount),
     BigInt(fee),
   );
+  const account_component =
+    tari_wallet_lib.get_account_component_address(public_key);
+
+  // send the transaction to the indexer
+  const submit_method = 'submit_transaction';
+  const submit_params = {
+    transaction,
+    is_dry_run: false,
+    required_substates: [
+      {
+        substate_id: account_component,
+        version: null,
+      },
+      {
+        substate_id: resource_address,
+        version: null,
+      },
+    ],
+  };
+  if (dest_account_exists) {
+    submit_params.required_substates.push({
+      substate_id: dest_account_component,
+      version: null,
+    });
+  }
+
+  // TODO: keep polling the indexer until we get a result for the transaction
+  return await sendIndexerRequest(submit_method, submit_params);
+}
+
+async function getAccountVaults(accountIndex: number) {
+  const { public_key } = await getRistrettoKeyPair(accountIndex);
+
+  const component_address =
+    tari_wallet_lib.get_account_component_address(public_key);
+
+  const result = await getSubstate(component_address).catch((e) => {
+    console.error('Error getting account data:', e);
+    return null;
+  });
+  if (!result?.substate) {
+    return { public_key, address: component_address, resources: [] };
+  }
+
+  const vaults = cbor.getValueByPath(
+    result.substate.substate.Component.body.state,
+    '$.vaults',
+  );
+  return vaults
+}
+
+async function confidentialTransfer(
+  request: JsonRpcRequest<Json[] | Record<string, Json>>,
+) {
+  const params = request.params as ConfidentialTransferRequest;
+  const { amount, resource_address, destination_public_key, fee } = params;
+
+  const accountIndex = 0;
+
+  // get the confidential vault for the resource
+  const accountVaults = await getAccountVaults(accountIndex);
+  const vault_id = accountVaults[resource_address];
+  if (!vault_id) {
+    console.error('Vault not found in account');
+    return null;
+  }
+  const vault = await getSubstate(vault_id).catch((e) => {
+    console.error('Error getting vault', e);
+    return null;
+  });
+  const vault_substate = vault.substate.substate.Vault;
+
+  // get the resource substate
+  const resource = await getSubstate(resource_address).catch((e) => {
+    console.error('Error getting resource', e);
+    return null;
+  });
+  const resource_substate = resource.substate.substate.Resource;
+
+  const userConfirmation = await snap.request({
+    method: 'snap_dialog',
+    params: {
+      type: 'confirmation',
+      content: panel([
+        heading('Confidential Transfer'),
+        text(
+          `This website requests a confidential transfer of funds from your account, do you want to proceed?.`,
+        ),
+        text(`**Destination:** ${destination_public_key}`),
+        text(`**Resource:** ${resource_address}`),
+        text(`**Amount:** ${amount}`),
+        text(`**Fee:** ${fee}`),
+      ]),
+    },
+  });
+  if (!userConfirmation) {
+    return null;
+  }
+
+  const { secret_key, public_key } = await getRistrettoKeyPair(accountIndex);
+
+  // check if the destination account exists
+  const dest_account_component = tari_wallet_lib.get_account_component_address(
+    destination_public_key,
+  );
+  const dest_account_exists = await substateExists(dest_account_component);
+  const create_dest_account = !dest_account_exists;
+
+  // build and sign the confidential transaction using the wasm lib
+  const transaction = tari_wallet_lib.create_confidential_transfer_transaction(
+    secret_key,
+    vault_id, //source_vault_id: &str
+    vault_substate, //source_vault_js: JsValue
+    destination_public_key,
+    create_dest_account,
+    resource_address,
+    resource_substate, //resource_substate_js: JsValue,
+    BigInt(amount),
+    BigInt(fee),
+    undefined, //undefined, //proof_from_resource: Option<String>,
+    false, // output_to_revealed: bool,
+    {"ConfidentialOnly": null}, //input_selection_js: JsValue,
+  );
+
   const account_component =
     tari_wallet_lib.get_account_component_address(public_key);
 
@@ -352,6 +477,8 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
       return getTransactions(request);
     case 'transfer':
       return transfer(request);
+    case 'confidentialTransfer':
+      return confidentialTransfer(request);
     case 'getFreeTestCoins':
       return getFreeTestCoins(request);
     case 'sendTransaction':

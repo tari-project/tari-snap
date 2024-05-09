@@ -7,7 +7,7 @@
     "url": "https://github.com/tari-project/tari-snap.git"
   },
   "source": {
-    "shasum": "bSvhF9tZ+PLR9Z0StQ1GYl5gdG9oFFfc2h3NTGz6hw0=",
+    "shasum": "fWJo2ondiWWClu4HqUwaLamS66tyBEskNCL/Qnrr+kg=",
     "location": {
       "npm": {
         "filePath": "dist/bundle.js",

@@ -119,6 +119,31 @@ export function SendDialog(props: SendDialogProps) {
         }
     };
 
+    const handleSendConfidentialClick = async () => {
+        try {
+            const response = await window.ethereum.request({
+                method: 'wallet_invokeSnap',
+                params: {
+                    snapId: defaultSnapOrigin,
+                    request: {
+                        method: 'confidentialTransfer',
+                        params: {
+                            amount,
+                            resource_address: token,
+                            destination_public_key: recipient,
+                            fee,
+                        }
+                    }
+                },
+            });
+            console.log({ response });
+            onSend(token, amount, recipient);
+        } catch (e) {
+            console.error(e);
+            metamaskDispatch({ type: MetamaskActions.SetError, payload: e });
+        }
+    };
+
     const handleClose = () => {
         onClose();
     };
@@ -195,6 +220,7 @@ export function SendDialog(props: SendDialogProps) {
                 </Box>
                 <Stack direction="row" justifyContent="center" sx={{ mt: 4, width: '100%' }}>
                     <ThemeFullWidthButton text="Send" onClick={async () => { await handleSendClick(); }} />
+                    <ThemeFullWidthButton text="Send Confidential" onClick={async () => { await handleSendConfidentialClick(); }} />
                 </Stack>
             </Box>
         </Dialog >
