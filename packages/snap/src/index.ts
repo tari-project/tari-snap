@@ -65,7 +65,7 @@ async function getAccountData(
   _request: JsonRpcRequest<Json[] | Record<string, Json>>,
 ) {
   const accountIndex = 0;
-  const { public_key } = await getRistrettoKeyPair(accountIndex);
+  const { secret_key, public_key } = await getRistrettoKeyPair(accountIndex);
 
   const component_address =
     tari_wallet_lib.get_account_component_address(public_key);
@@ -90,13 +90,14 @@ async function getAccountData(
   const resources = await Promise.all(
     vault_ids.map(async (v: any) => {
       const res = await getSubstate(v);
-
-      const { resource_container: container } = res.substate.substate.Vault;
+      const vault_substate = res.substate.substate.Vault;
+      const { resource_container: container } = vault_substate;
 
       if (container.Confidential) {
         const { address: resource_address, revealed_amount: balance } =
           container.Confidential;
-        return { type: 'confidential', resource_address, balance };
+        const confidentialBalance = tari_wallet_lib.get_confidential_balance(vault_substate, secret_key);
+        return { type: 'confidential', resource_address, balance, confidentialBalance };
       }
 
       if (container.Fungible) {

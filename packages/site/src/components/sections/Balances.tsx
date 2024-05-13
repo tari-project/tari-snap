@@ -29,6 +29,7 @@ function Balances() {
     const getBalances = async () => {
         try {
             const data = await getAccountData();
+            console.log({data});
 
             if (data && data.public_key) {
                 const payload: AccountState = {

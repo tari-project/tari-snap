@@ -4,7 +4,7 @@ use rand::rngs::OsRng;
 use tari_crypto::ristretto::{RistrettoPublicKey, RistrettoSecretKey};
 use tari_dan_wallet_crypto::{create_withdraw_proof, encrypt_value_and_mask, extract_value_and_mask, kdfs, unblind_output, ConfidentialOutputMaskAndValue, ConfidentialProofStatement};
 use tari_engine_types::{confidential::ConfidentialOutput, resource::Resource, substate::SubstateId, vault::Vault};
-use tari_template_lib::{args, models::{Amount, ComponentAddress, EncryptedData, ResourceAddress, VaultId}};
+use tari_template_lib::{args, models::{Amount, ComponentAddress, EncryptedData, ObjectKey, ResourceAddress, VaultId}};
 use tari_transaction::{Instruction, SubstateRequirement, Transaction};
 use wasm_bindgen::{JsError, JsValue};
 use tari_common_types::types::{Commitment, PrivateKey, PublicKey};
@@ -106,6 +106,15 @@ impl ConfidentialTransferParams {
     }
 }
 
+pub fn get_confidential_balance(
+    vault: &Vault,
+    key: &RistrettoSecretKey
+) -> Result<u64, JsError> {
+    let dummy_substate_id = SubstateId::Resource(ResourceAddress::new(ObjectKey::default()));
+    let vault_outputs = get_confidential_outputs_from_vault(dummy_substate_id.clone(), dummy_substate_id, vault, key)?;
+    let balance = vault_outputs.iter().map(|o| o.value).sum();
+    Ok(balance)
+}
 
 fn resolved_inputs_for_transfer(
     vault_address: SubstateId,
@@ -154,7 +163,7 @@ fn get_confidential_amount_from_vault(
     let mut total_output_amount = 0;
     let mut outputs = Vec::new();
 
-    let mut vault_outputs = get_confidential_outpus_from_vault(account_address, vault_address, vault, key)?;
+    let mut vault_outputs = get_confidential_outputs_from_vault(account_address, vault_address, vault, key)?;
 
     while total_output_amount < amount {
         let output =
@@ -173,7 +182,7 @@ fn get_confidential_amount_from_vault(
     Ok((outputs, total_output_amount))
 }
 
-fn get_confidential_outpus_from_vault(account_address: SubstateId, vault_address: SubstateId, vault: &Vault, key: &RistrettoSecretKey) -> Result<Vec<ConfidentialOutputModel>, JsError> {
+fn get_confidential_outputs_from_vault(account_address: SubstateId, vault_address: SubstateId, vault: &Vault, key: &RistrettoSecretKey) -> Result<Vec<ConfidentialOutputModel>, JsError> {
     let commitments = vault.get_confidential_commitments()
         .ok_or(JsError::new(&format!("No confidential commitments in the vault")))?;
     let outputs: Vec<ConfidentialOutput> = commitments.values().cloned().collect();

@@ -4,6 +4,7 @@ pub mod metadata;
 mod confidential_transfer;
 
 use std::collections::HashMap;
+use std::convert::TryInto;
 use std::str::FromStr;
 
 use component::get_account_address_from_public_key;
@@ -281,12 +282,25 @@ pub fn create_free_test_coins_transaction(
 }
 
 #[wasm_bindgen]
+pub fn get_confidential_balance(
+    vault_js: JsValue,
+    account_private_key: &str,
+) -> Result<JsValue, JsError> {
+    let vault: Vault = serde_wasm_bindgen::from_value(vault_js)?;
+    let account_private_key = RistrettoSecretKey::from_hex(account_private_key)
+        .map_err(|e| JsError::new(&format!("Could not parse private key: {:?}", e)))?;
+    let balance = confidential_transfer::get_confidential_balance(&vault, &account_private_key)?;
+    Ok(serde_wasm_bindgen::to_value(&balance)?)
+}
+
+#[wasm_bindgen]
 pub fn view_vault_balance(
     vault_js: JsValue,
     minimum_expected_value: Option<u64>,
     maximum_expected_value: Option<u64>,
     ecdsa_str: &str
 ) -> Result<JsValue, JsError> {
+    // TODO: refactor to reuse the "get_confidential_balance" function
     let vault: Vault = serde_wasm_bindgen::from_value(vault_js)?;
     let secret_view_key = ecdsa_to_ristretto_private_key(ecdsa_str)?;
 
