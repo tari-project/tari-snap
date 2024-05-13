@@ -33,6 +33,7 @@ export function SendDialog(props: SendDialogProps) {
     const [amount, setAmount] = React.useState(0);
     const [recipient, setRecipient] = React.useState('');
     const [fee, setFee] = React.useState(0);
+    const [showCheckConfidential, setShowCheckConfidential] = React.useState(false);
     const [checkConfidential, setCheckConfidential] = React.useState(false);
 
     // clear dialog form each time it closes
@@ -52,10 +53,30 @@ export function SendDialog(props: SendDialogProps) {
     // recalculate the max balance when a token is selected
     useEffect(() => {
         if (token) {
+            const tokenData = getTokenData(token);
+
+            if (!tokenData) {
+                return;
+            }
+
+            if (tokenData.type == "confidential") {
+                setShowCheckConfidential(true);
+            }
+
             const value = getTokenBalance(token);
             setTokenBalance(value);
         }
     }, [token]);
+
+    // update the max balance if the user change between normal or confidential transfers
+    useEffect(() => {
+        let value = getTokenBalance(token);
+
+        if (checkConfidential)
+            value = getTokenConfidentialBalance(token);
+        
+        setTokenBalance(value);
+    }, [checkConfidential]);
 
     const refreshForm = () => {
         if (accountBalances && accountBalances.length > 0) {
@@ -85,14 +106,27 @@ export function SendDialog(props: SendDialogProps) {
         setAmount(tokenBalance);
     };
 
-    const getTokenBalance = (tokenAddress: string) => {
+    const getTokenData = (tokenAddress: string) => {
         if (!tokenAddress || !props.accountBalances) {
-            return 0;
+            return null;
         }
 
         const element = props.accountBalances.find((b) => b.resource_address === tokenAddress);
-        if (element) {
-            return element.balance;
+
+        return element;
+    }
+
+    const getTokenBalance = (tokenAddress: string) => {
+        const tokenData = getTokenData(tokenAddress);
+        if (tokenData) {
+            return tokenData.balance;
+        } else return 0;
+    }
+
+    const getTokenConfidentialBalance = (tokenAddress: string) => {
+        const tokenData = getTokenData(tokenAddress);
+        if (tokenData) {
+            return tokenData.confidentialBalance;
         } else return 0;
     }
 

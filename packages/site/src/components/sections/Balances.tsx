@@ -29,7 +29,6 @@ function Balances() {
     const getBalances = async () => {
         try {
             const data = await getAccountData();
-            console.log({data});
 
             if (data && data.public_key) {
                 const payload: AccountState = {
@@ -141,6 +140,7 @@ function Balances() {
                                 <TableRow>
                                     <TableCell sx={{ fontSize: 14 }}>Resource Address</TableCell>
                                     <TableCell sx={{ fontSize: 14 }}>Balance</TableCell>
+                                    <TableCell sx={{ fontSize: 14 }}>Confidential Balance</TableCell>
                                 </TableRow>
                             </TableHead>
                             <TableBody>
@@ -152,6 +152,7 @@ function Balances() {
                                         >
                                             <TableCell sx={{ fontSize: 14 }}>{token.resource_address}</TableCell>
                                             <TableCell sx={{ fontSize: 14 }}> {token.balance}</TableCell>
+                                            <TableCell sx={{ fontSize: 14 }}> {token.confidentialBalance}</TableCell>
                                         </TableRow>
                                     ))
                                 }
