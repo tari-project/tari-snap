@@ -14,6 +14,7 @@ import { MetaMaskContext, MetamaskActions, TariContext } from "../hooks";
 import { ThemeFullWidthButton } from "./Buttons";
 import { truncateText } from "../utils/text";
 import { defaultSnapOrigin } from "../config/snap";
+import Checkbox from "@mui/material/Checkbox";
 
 export interface SendDialogProps {
     open: boolean;
@@ -32,6 +33,7 @@ export function SendDialog(props: SendDialogProps) {
     const [amount, setAmount] = React.useState(0);
     const [recipient, setRecipient] = React.useState('');
     const [fee, setFee] = React.useState(0);
+    const [checkConfidential, setCheckConfidential] = React.useState(false);
 
     // clear dialog form each time it closes
     useEffect(() => {
@@ -94,39 +96,21 @@ export function SendDialog(props: SendDialogProps) {
         } else return 0;
     }
 
-    const handleSendClick = async () => {
-        try {
-            const response = await window.ethereum.request({
-                method: 'wallet_invokeSnap',
-                params: {
-                    snapId: defaultSnapOrigin,
-                    request: {
-                        method: 'transfer',
-                        params: {
-                            amount,
-                            resource_address: token,
-                            destination_public_key: recipient,
-                            fee,
-                        }
-                    }
-                },
-            });
-            console.log({ response });
-            onSend(token, amount, recipient);
-        } catch (e) {
-            console.error(e);
-            metamaskDispatch({ type: MetamaskActions.SetError, payload: e });
-        }
+    const handleCheckConfidential = (event: any) => {
+        let checkboxValue = event.target.checked;
+        setCheckConfidential(checkboxValue);
     };
 
-    const handleSendConfidentialClick = async () => {
+    const handleSendClick = async () => {
         try {
+            const snapMethod = checkConfidential ? 'confidentialTransfer' : 'transfer';
+
             const response = await window.ethereum.request({
                 method: 'wallet_invokeSnap',
                 params: {
                     snapId: defaultSnapOrigin,
                     request: {
-                        method: 'confidentialTransfer',
+                        method: snapMethod,
                         params: {
                             amount,
                             resource_address: token,
@@ -136,7 +120,7 @@ export function SendDialog(props: SendDialogProps) {
                     }
                 },
             });
-            console.log({ response });
+            console.log({ snapMethod, response });
             onSend(token, amount, recipient);
         } catch (e) {
             console.error(e);
@@ -167,7 +151,11 @@ export function SendDialog(props: SendDialogProps) {
                 </Stack>
                 <Divider sx={{ mt: 3, mb: 3 }} variant="middle" />
                 <Box sx={{ padding: 1 }}>
-                    <Stack direction="row" justifyContent="space-between" spacing={2}>
+                    <Stack direction="row" spacing={0.5} justifyContent="flex-start" alignItems='center'>
+                        <Checkbox onClick={handleCheckConfidential} value={checkConfidential} />
+                        <Typography style={{ fontSize: 14 }}>Confidential transfer</Typography>
+                    </Stack>
+                    <Stack direction="row" justifyContent="space-between" spacing={2} sx={{ marginTop: 1 }}>
                         <Typography style={{ fontSize: 14 }}>
                             Token
                         </Typography>
@@ -220,7 +208,6 @@ export function SendDialog(props: SendDialogProps) {
                 </Box>
                 <Stack direction="row" justifyContent="center" sx={{ mt: 4, width: '100%' }}>
                     <ThemeFullWidthButton text="Send" onClick={async () => { await handleSendClick(); }} />
-                    <ThemeFullWidthButton text="Send Confidential" onClick={async () => { await handleSendConfidentialClick(); }} />
                 </Stack>
             </Box>
         </Dialog >
