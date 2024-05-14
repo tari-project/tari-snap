@@ -1,6 +1,5 @@
 use std::convert::TryFrom;
 
-use rand::rngs::OsRng;
 use tari_crypto::ristretto::{RistrettoPublicKey, RistrettoSecretKey};
 use tari_dan_wallet_crypto::{create_withdraw_proof, encrypt_value_and_mask, extract_value_and_mask, kdfs, unblind_output, ConfidentialOutputMaskAndValue, ConfidentialProofStatement};
 use tari_engine_types::{confidential::ConfidentialOutput, resource::Resource, substate::SubstateId, vault::Vault};
@@ -411,7 +410,7 @@ pub fn build_confidential_transfer_transaction(
 
     let transaction = Transaction::builder()
         .with_fee_instructions(instructions.to_vec())
-        .with_input_refs(input_refs)
+        .with_inputs(input_refs)
         .sign(&params.source_private_key)
         .build();
 

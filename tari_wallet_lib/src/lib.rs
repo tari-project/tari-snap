@@ -106,7 +106,7 @@ pub fn create_transaction(
     let transaction = Transaction::builder()
         .with_fee_instructions(fee_instructions.to_vec())
         .with_instructions(instructions.to_vec())
-        .with_input_refs(input_refs.to_vec())
+        .with_inputs(input_refs.to_vec())
         .sign(&account_private_key)
         .build();
 
@@ -170,7 +170,7 @@ pub fn create_transfer_transaction(
 
     let transaction = Transaction::builder()
         .with_fee_instructions(instructions.to_vec())
-        .with_input_refs(input_refs)
+        .with_inputs(input_refs)
         .sign(&source_private_key)
         .build();
 
