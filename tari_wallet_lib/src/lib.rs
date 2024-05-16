@@ -1,11 +1,14 @@
 pub mod component;
 mod crypto;
 pub mod metadata;
+mod confidential_transfer;
 
 use std::collections::HashMap;
+use std::convert::TryInto;
 use std::str::FromStr;
 
 use component::get_account_address_from_public_key;
+use confidential_transfer::{build_confidential_transfer_transaction, ConfidentialTransferInputSelection, ConfidentialTransferParams};
 use crypto::AlwaysMissLookupTable;
 use tari_crypto::keys::{PublicKey, SecretKey};
 use tari_crypto::ristretto::{RistrettoPublicKey, RistrettoSecretKey};
@@ -13,11 +16,13 @@ use tari_crypto::tari_utilities::hex::Hex;
 use tari_crypto::tari_utilities::ByteArray;
 use tari_engine_types::confidential::ElgamalVerifiableBalance;
 use tari_engine_types::instruction::Instruction;
+use tari_engine_types::resource::Resource;
 use tari_engine_types::substate::SubstateId;
 use tari_engine_types::vault::Vault;
 use tari_template_lib::args;
+use tari_template_lib::models::VaultId;
 use tari_template_lib::prelude::{
-    Amount, NonFungibleAddress, ResourceAddress, RistrettoPublicKeyBytes, TemplateAddress, NonFungibleId,
+    Amount, NonFungibleAddress, ResourceAddress, RistrettoPublicKeyBytes, NonFungibleId,
 };
 use tari_transaction::{SubstateRequirement, Transaction};
 use wasm_bindgen::prelude::*;
@@ -101,7 +106,7 @@ pub fn create_transaction(
     let transaction = Transaction::builder()
         .with_fee_instructions(fee_instructions.to_vec())
         .with_instructions(instructions.to_vec())
-        .with_input_refs(input_refs.to_vec())
+        .with_inputs(input_refs.to_vec())
         .sign(&account_private_key)
         .build();
 
@@ -141,14 +146,9 @@ pub fn create_transfer_transaction(
     ];
 
     if create_destination_account {
-        let owner_token = NonFungibleAddress::from_public_key(
-            RistrettoPublicKeyBytes::from_bytes(destination_public_key.as_bytes()).unwrap(),
-        );
-        let template_address: TemplateAddress = TemplateAddress::from_array([0; 32]);
-        instructions.push(Instruction::CallFunction {
-            template_address,
-            function: "create".to_string(),
-            args: args![owner_token],
+        instructions.push(Instruction::CreateAccount {
+            owner_public_key: destination_public_key.clone(),
+            workspace_bucket: None,
         });
     }
 
@@ -170,11 +170,64 @@ pub fn create_transfer_transaction(
 
     let transaction = Transaction::builder()
         .with_fee_instructions(instructions.to_vec())
-        .with_input_refs(input_refs)
+        .with_inputs(input_refs)
         .sign(&source_private_key)
         .build();
 
     Ok(serde_wasm_bindgen::to_value(&transaction)?)
+}
+
+#[wasm_bindgen]
+pub fn create_confidential_transfer_transaction(
+    source_private_key: &str,
+    source_vault_id: &str,
+    source_vault_js: JsValue,
+    destination_public_key_hex: &str,
+    create_destination_account: bool,
+    resource_address: &str,
+    resource_substate_js: JsValue,
+    amount: i64,
+    fee: i64,
+    proof_from_resource: Option<String>,
+    output_to_revealed: bool,
+    input_selection_js: JsValue,
+) -> Result<JsValue, JsError> {
+    let source_private_key = RistrettoSecretKey::from_hex(source_private_key)
+        .map_err(|e| JsError::new(&format!("Could not parse private key: {:?}", e)))?;
+    let source_public_key = RistrettoPublicKey::from_secret_key(&source_private_key);
+    let source_account_address = get_account_address_from_public_key(&source_public_key.to_hex())?;
+
+    let destination_account_address = get_account_address_from_public_key(destination_public_key_hex)?;
+    let destination_public_key = RistrettoPublicKey::from_hex(destination_public_key_hex)
+        .map_err(|e| JsError::new(&format!("Could not parse public key: {:?}", e)))?;
+
+    let resource_address = ResourceAddress::from_str(resource_address)?;
+    let proof_from_resource = proof_from_resource.map(|s| ResourceAddress::from_str(&s)).transpose()?;
+
+    let source_vault_id = VaultId::from_str(source_vault_id)?;
+    let source_vault: Vault = serde_wasm_bindgen::from_value(source_vault_js)?;
+    let resource_substate: Resource = serde_wasm_bindgen::from_value(resource_substate_js)?;
+    let input_selection: ConfidentialTransferInputSelection = serde_wasm_bindgen::from_value(input_selection_js)?;
+
+    let params = ConfidentialTransferParams {
+        source_private_key,
+        source_public_key,
+        source_account_address,
+        destination_public_key,
+        destination_account_address,
+        resource_address,
+        create_destination_account,
+        amount,
+        fee,
+        proof_from_resource,
+        output_to_revealed,
+        source_vault,
+        resource_substate,
+        input_selection,
+        source_vault_id,
+    };
+
+    Ok(build_confidential_transfer_transaction(params)?)
 }
 
 #[wasm_bindgen]
@@ -229,12 +282,25 @@ pub fn create_free_test_coins_transaction(
 }
 
 #[wasm_bindgen]
+pub fn get_confidential_balance(
+    vault_js: JsValue,
+    account_private_key: &str,
+) -> Result<JsValue, JsError> {
+    let vault: Vault = serde_wasm_bindgen::from_value(vault_js)?;
+    let account_private_key = RistrettoSecretKey::from_hex(account_private_key)
+        .map_err(|e| JsError::new(&format!("Could not parse private key: {:?}", e)))?;
+    let balance = confidential_transfer::get_confidential_balance(&vault, &account_private_key)?;
+    Ok(serde_wasm_bindgen::to_value(&balance)?)
+}
+
+#[wasm_bindgen]
 pub fn view_vault_balance(
     vault_js: JsValue,
     minimum_expected_value: Option<u64>,
     maximum_expected_value: Option<u64>,
     ecdsa_str: &str
 ) -> Result<JsValue, JsError> {
+    // TODO: refactor to reuse the "get_confidential_balance" function
     let vault: Vault = serde_wasm_bindgen::from_value(vault_js)?;
     let secret_view_key = ecdsa_to_ristretto_private_key(ecdsa_str)?;
 

@@ -14,6 +14,7 @@ import { MetaMaskContext, MetamaskActions, TariContext } from "../hooks";
 import { ThemeFullWidthButton } from "./Buttons";
 import { truncateText } from "../utils/text";
 import { defaultSnapOrigin } from "../config/snap";
+import Checkbox from "@mui/material/Checkbox";
 
 export interface SendDialogProps {
     open: boolean;
@@ -32,6 +33,8 @@ export function SendDialog(props: SendDialogProps) {
     const [amount, setAmount] = React.useState(0);
     const [recipient, setRecipient] = React.useState('');
     const [fee, setFee] = React.useState(0);
+    const [showCheckConfidential, setShowCheckConfidential] = React.useState(false);
+    const [checkConfidential, setCheckConfidential] = React.useState(false);
 
     // clear dialog form each time it closes
     useEffect(() => {
@@ -50,10 +53,30 @@ export function SendDialog(props: SendDialogProps) {
     // recalculate the max balance when a token is selected
     useEffect(() => {
         if (token) {
+            const tokenData = getTokenData(token);
+
+            if (!tokenData) {
+                return;
+            }
+
+            if (tokenData.type == "confidential") {
+                setShowCheckConfidential(true);
+            }
+
             const value = getTokenBalance(token);
             setTokenBalance(value);
         }
     }, [token]);
+
+    // update the max balance if the user change between normal or confidential transfers
+    useEffect(() => {
+        let value = getTokenBalance(token);
+
+        if (checkConfidential)
+            value = getTokenConfidentialBalance(token);
+        
+        setTokenBalance(value);
+    }, [checkConfidential]);
 
     const refreshForm = () => {
         if (accountBalances && accountBalances.length > 0) {
@@ -83,25 +106,45 @@ export function SendDialog(props: SendDialogProps) {
         setAmount(tokenBalance);
     };
 
-    const getTokenBalance = (tokenAddress: string) => {
+    const getTokenData = (tokenAddress: string) => {
         if (!tokenAddress || !props.accountBalances) {
-            return 0;
+            return null;
         }
 
         const element = props.accountBalances.find((b) => b.resource_address === tokenAddress);
-        if (element) {
-            return element.balance;
+
+        return element;
+    }
+
+    const getTokenBalance = (tokenAddress: string) => {
+        const tokenData = getTokenData(tokenAddress);
+        if (tokenData) {
+            return tokenData.balance;
         } else return 0;
     }
 
+    const getTokenConfidentialBalance = (tokenAddress: string) => {
+        const tokenData = getTokenData(tokenAddress);
+        if (tokenData) {
+            return tokenData.confidentialBalance;
+        } else return 0;
+    }
+
+    const handleCheckConfidential = (event: any) => {
+        let checkboxValue = event.target.checked;
+        setCheckConfidential(checkboxValue);
+    };
+
     const handleSendClick = async () => {
         try {
+            const snapMethod = checkConfidential ? 'confidentialTransfer' : 'transfer';
+
             const response = await window.ethereum.request({
                 method: 'wallet_invokeSnap',
                 params: {
                     snapId: defaultSnapOrigin,
                     request: {
-                        method: 'transfer',
+                        method: snapMethod,
                         params: {
                             amount,
                             resource_address: token,
@@ -111,7 +154,7 @@ export function SendDialog(props: SendDialogProps) {
                     }
                 },
             });
-            console.log({ response });
+            console.log({ snapMethod, response });
             onSend(token, amount, recipient);
         } catch (e) {
             console.error(e);
@@ -142,7 +185,11 @@ export function SendDialog(props: SendDialogProps) {
                 </Stack>
                 <Divider sx={{ mt: 3, mb: 3 }} variant="middle" />
                 <Box sx={{ padding: 1 }}>
-                    <Stack direction="row" justifyContent="space-between" spacing={2}>
+                    <Stack direction="row" spacing={0.5} justifyContent="flex-start" alignItems='center'>
+                        <Checkbox onClick={handleCheckConfidential} value={checkConfidential} />
+                        <Typography style={{ fontSize: 14 }}>Confidential transfer</Typography>
+                    </Stack>
+                    <Stack direction="row" justifyContent="space-between" spacing={2} sx={{ marginTop: 1 }}>
                         <Typography style={{ fontSize: 14 }}>
                             Token
                         </Typography>

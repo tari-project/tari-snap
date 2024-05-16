@@ -21,12 +21,14 @@ tari_bor = { git = "https://github.com/tari-project/tari-dan.git", branch = "dev
 tari_transaction = { git = "https://github.com/tari-project/tari-dan.git", branch = "development" }
 tari_engine_types = { git = "https://github.com/tari-project/tari-dan.git", branch = "development" }
 tari_template_builtin = { git = "https://github.com/tari-project/tari-dan.git", branch = "development" }
-tari_crypto = { version = "0.20", features = ["borsh"] }
-
+tari_dan_wallet_crypto = { git = "https://github.com/tari-project/tari-dan.git", branch = "development" }
+tari_common_types = { git = "https://github.com/tari-project/tari.git", branch = "feature-dan2" }
+tari_crypto = { version = "=0.20.0", features = ["borsh"] }
 wasm-bindgen = "0.2"
 serde-wasm-bindgen = "0.6.0"
 serde = "1.0.126"
 getrandom = { version = "0.2.11", features = ["js"] }
+rand = "0.8.5"
 
 # These crates are used for running unit tests.
 [dev-dependencies]
