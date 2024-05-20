@@ -1,7 +1,7 @@
 # You must change these to your own details.
 [package]
 name = "tari_wallet_lib"
-version = "0.1.0"
+version = "0.1.2"
 categories = ["wasm"]
 readme = "README.md"
 edition = "2018"

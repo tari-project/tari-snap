@@ -1,5 +1,5 @@
 {
-  "version": "0.2.1",
+  "version": "0.2.4",
   "description": "MetaMask snap for the Tari network",
   "proposedName": "Tari Snap",
   "repository": {
@@ -7,7 +7,7 @@
     "url": "https://github.com/tari-project/tari-snap.git"
   },
   "source": {
-    "shasum": "jjAH7W+T2EjrKmnw0ls5B41m6gztHF1EfkRGiE2tXsE=",
+    "shasum": "mx94alBup1U25qfQB9cKXZjPUM5KTneBYpLFo2dybeE=",
     "location": {
       "npm": {
         "filePath": "dist/bundle.js",

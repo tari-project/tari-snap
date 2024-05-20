@@ -14,12 +14,19 @@ You will also need a Tari network running, with an indexer.
 
 For building the project, Node.js version 18 or superior is required.
 
+
+
+
 ## Getting Started
 
 First clone the repo
 ```shell
 git clone https://github.com/mrnaveira/tari-snap
 cd tari-snap
+```
+
+```
+nvm use 18
 ```
 
 Then you need to build the WebAssembly library used to build Tari transactions:
