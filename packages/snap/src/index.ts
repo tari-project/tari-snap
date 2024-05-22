@@ -520,6 +520,7 @@ export const onHomePage: OnHomePageHandler = async () => {
         name: "settings-form",
         children: [
           input({
+            label: "Tari Indexer URL",
             name: "indexer-url",
             value: indexer_url ? indexer_url : "",
           }),
