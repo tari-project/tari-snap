@@ -1,9 +1,10 @@
 import {
   Json,
   JsonRpcRequest,
+  OnHomePageHandler,
   OnRpcRequestHandler,
-} from '@metamask/snaps-types';
-import { heading, panel, text } from '@metamask/snaps-ui';
+} from '@metamask/snaps-sdk';
+import { heading, panel, text } from '@metamask/snaps-sdk';
 import * as cbor from './cbor';
 import * as tari_wallet_lib from './tari_wallet_lib';
 import {
@@ -503,4 +504,13 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
     default:
       throw new Error(`Method '${request.method}' not found.`);
   }
+};
+
+export const onHomePage: OnHomePageHandler = async () => {
+  return {
+    content: panel([
+      heading('Hello world!'),
+      text('Welcome to my Snap home page!'),
+    ]),
+  };
 };

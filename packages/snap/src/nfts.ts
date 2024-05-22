@@ -1,4 +1,4 @@
-import { Json, JsonRpcRequest } from '@metamask/snaps-types';
+import { Json, JsonRpcRequest } from '@metamask/snaps-sdk';
 import * as tari_wallet_lib from './tari_wallet_lib';
 import { substateExists } from './tari_indexer_client';
 import { getRistrettoKeyPair } from './keys';
