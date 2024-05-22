@@ -3,8 +3,11 @@ import {
   JsonRpcRequest,
   OnHomePageHandler,
   OnRpcRequestHandler,
+  OnUserInputHandler,
+  UserInputEventType,
+  input,
 } from '@metamask/snaps-sdk';
-import { heading, panel, text } from '@metamask/snaps-sdk';
+import { heading, panel, text, button, divider, form } from '@metamask/snaps-sdk';
 import * as cbor from './cbor';
 import * as tari_wallet_lib from './tari_wallet_lib';
 import {
@@ -27,6 +30,7 @@ import {
   sendTransaction,
 } from './transactions';
 import { mintAccountNft, transferNft } from './nfts';
+import { getState, setState } from './state';
 
 declare let snap: any;
 
@@ -507,10 +511,34 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
 };
 
 export const onHomePage: OnHomePageHandler = async () => {
+  const { indexer_url } = await getState();
   return {
     content: panel([
-      heading('Hello world!'),
-      text('Welcome to my Snap home page!'),
+      heading('Tari Snap settings'),
+      divider(),
+      form({
+        name: "settings-form",
+        children: [
+          input({
+            name: "indexer-url",
+            value: indexer_url ? indexer_url : "",
+          }),
+          button({
+            value: "Update settings",
+            buttonType: "submit",
+          }),
+        ],
+      }),
     ]),
   };
+};
+
+export const onUserInput: OnUserInputHandler = async ({ id, event }) => {
+  if (
+    event.type === UserInputEventType.FormSubmitEvent &&
+    event.name === 'settings-form'
+  ) {
+    const indexer_url = event.value['indexer-url'];
+    setState({ indexer_url })
+  }
 };

@@ -1,10 +1,10 @@
 
 export type State = {
-    tari_wallet_daemon_url: string | null;
+  indexer_url: string | null;
 };
 
 const DEFAULT_STATE = {
-    tari_wallet_daemon_url: null,
+  indexer_url: null,
 };
 
 export async function setState(newState: State) {
