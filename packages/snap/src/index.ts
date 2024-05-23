@@ -516,19 +516,10 @@ export const onHomePage: OnHomePageHandler = async () => {
     content: panel([
       heading('Tari Snap settings'),
       divider(),
-      form({
-        name: "settings-form",
-        children: [
-          input({
-            label: "Tari Indexer URL",
-            name: "indexer-url",
-            value: indexer_url,
-          }),
-          button({
-            value: "Update settings",
-            buttonType: "submit",
-          }),
-        ],
+      input({
+        label: "Tari Indexer URL",
+        name: "indexer-url",
+        value: indexer_url,
       }),
     ]),
   };
@@ -536,10 +527,10 @@ export const onHomePage: OnHomePageHandler = async () => {
 
 export const onUserInput: OnUserInputHandler = async ({ id, event }) => {
   if (
-    event.type === UserInputEventType.FormSubmitEvent &&
-    event.name === 'settings-form'
+    event.type === UserInputEventType.InputChangeEvent &&
+    event.name === 'indexer-url'
   ) {
-    const indexer_url = event.value['indexer-url'];
+    const indexer_url = event.value;
     setState({ indexer_url })
   }
 };
