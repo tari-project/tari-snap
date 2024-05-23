@@ -522,7 +522,7 @@ export const onHomePage: OnHomePageHandler = async () => {
           input({
             label: "Tari Indexer URL",
             name: "indexer-url",
-            value: indexer_url ? indexer_url : "",
+            value: indexer_url,
           }),
           button({
             value: "Update settings",

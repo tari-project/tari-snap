@@ -1,10 +1,11 @@
+import { DEFAULT_TARI_INDEXER_URL } from "./env";
 
 export type State = {
-  indexer_url: string | null;
+  indexer_url: string;
 };
 
 const DEFAULT_STATE = {
-  indexer_url: null,
+  indexer_url: DEFAULT_TARI_INDEXER_URL || "",
 };
 
 export async function setState(newState: State) {
