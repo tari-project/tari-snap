@@ -1,10 +1,11 @@
+import { DEFAULT_TARI_INDEXER_URL } from "./env";
 
 export type State = {
-    tari_wallet_daemon_url: string | null;
+  indexer_url: string;
 };
 
 const DEFAULT_STATE = {
-    tari_wallet_daemon_url: null,
+  indexer_url: DEFAULT_TARI_INDEXER_URL || "",
 };
 
 export async function setState(newState: State) {

@@ -1,12 +1,4 @@
-/**
- * Get the URL of the Tari indexer. If the `TARI_INDEXER_URL` environment
- * variable is set, it will be used. Otherwise, the default URL
- *
- * @returns The URL of the Tari indexer.
- */
-function getIndexerUrl() {
-  return process.env.TARI_INDEXER_URL || 'http://localhost:18300';
-}
+import { getState } from "./state";
 
 async function rawIndexerCall(method: string, params: object) {
   let headers: HeadersInit = {
@@ -28,7 +20,8 @@ async function rawIndexerCall(method: string, params: object) {
   };
 
   // TODO: handle/display/log errors
-  const response = await fetch(getIndexerUrl(), requestParams);
+  const { indexer_url } = await getState();
+  const response = await fetch(indexer_url, requestParams);
   const json_response = await response.json();
   return json_response;
 }

@@ -1,9 +1,13 @@
 import {
   Json,
   JsonRpcRequest,
+  OnHomePageHandler,
   OnRpcRequestHandler,
-} from '@metamask/snaps-types';
-import { heading, panel, text } from '@metamask/snaps-ui';
+  OnUserInputHandler,
+  UserInputEventType,
+  input,
+} from '@metamask/snaps-sdk';
+import { heading, panel, text, button, divider, form } from '@metamask/snaps-sdk';
 import * as cbor from './cbor';
 import * as tari_wallet_lib from './tari_wallet_lib';
 import {
@@ -27,6 +31,7 @@ import {
   sendTransaction,
 } from './transactions';
 import { mintAccountNft, transferNft } from './nfts';
+import { getState, setState } from './state';
 
 declare let snap: any;
 
@@ -514,5 +519,30 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
       return getConfidentialVaultBalances(request);
     default:
       throw new Error(`Method '${request.method}' not found.`);
+  }
+};
+
+export const onHomePage: OnHomePageHandler = async () => {
+  const { indexer_url } = await getState();
+  return {
+    content: panel([
+      heading('Tari Snap settings'),
+      divider(),
+      input({
+        label: "Tari Indexer URL",
+        name: "indexer-url",
+        value: indexer_url,
+      }),
+    ]),
+  };
+};
+
+export const onUserInput: OnUserInputHandler = async ({ id, event }) => {
+  if (
+    event.type === UserInputEventType.InputChangeEvent &&
+    event.name === 'indexer-url'
+  ) {
+    const indexer_url = event.value;
+    setState({ indexer_url })
   }
 };

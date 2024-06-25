@@ -27,7 +27,7 @@ module.exports = {
     });
     bundler.transform(
       envify({
-        TARI_INDEXER_URL: process.env.TARI_INDEXER_URL,
+        DEFAULT_TARI_INDEXER_URL: process.env.DEFAULT_TARI_INDEXER_URL,
       }),
     );
   },
