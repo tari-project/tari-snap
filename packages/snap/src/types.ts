@@ -49,3 +49,10 @@ export type GetConfidentialVaultBalancesRequest = {
   minimum_expected_value: number | null;
   maximum_expected_value: number | null;
 };
+
+export type ListSubstatesRequest = {
+  filter_by_template: string | null;
+  filter_by_type: string | null;
+  limit: bigint | null;
+  offset: bigint | null;
+}

@@ -22,6 +22,7 @@ import {
   GetFreeTestCoinsRequest,
   GetRistrettoPublicKeyRequest,
   GetSubstateRequest,
+  ListSubstatesRequest,
   TransferRequest,
 } from './types';
 import {
@@ -419,6 +420,15 @@ async function getSubstateHandler(
   return await getSubstate(substate_address);
 }
 
+async function listSubstates(
+  request: JsonRpcRequest<Json[] | Record<string, Json>>,
+) {
+  const params = request.params as ListSubstatesRequest;
+  return await sendIndexerRequest('list_substates', {
+    ...params,
+  });
+}
+
 async function getTemplateDefinition(
   request: JsonRpcRequest<Json[] | Record<string, Json>>,
 ) {
@@ -499,6 +509,8 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
       return transferNft(wasm, request);
     case 'getSubstate':
       return getSubstateHandler(request);
+    case 'listSubstates':
+      return listSubstates(request);
     case 'getTemplateDefinition':
       return getTemplateDefinition(request);
     case 'getPublicKey':
