@@ -165,7 +165,7 @@ async function transfer(
   const create_dest_account = !dest_account_exists;
 
   // build and sign transaction using the wasm lib
-  const transaction = tari_wallet_lib.create_transfer_transaction(
+  const transaction_json = tari_wallet_lib.create_transfer_transaction(
     secret_key,
     destination_public_key,
     create_dest_account,
@@ -173,6 +173,8 @@ async function transfer(
     BigInt(amount),
     BigInt(fee),
   );
+  const transaction = JSON.parse(transaction_json);
+
   const account_component =
     tari_wallet_lib.get_account_component_address(public_key);
 
@@ -282,7 +284,7 @@ async function confidentialTransfer(
   const create_dest_account = !dest_account_exists;
 
   // build and sign the confidential transaction using the wasm lib
-  const transaction = tari_wallet_lib.create_confidential_transfer_transaction(
+  const transaction_json = tari_wallet_lib.create_confidential_transfer_transaction(
     secret_key,
     vault_id, //source_vault_id: &str
     vault_substate, //source_vault_js: JsValue
@@ -296,6 +298,7 @@ async function confidentialTransfer(
     false, // output_to_revealed: bool,
     {"ConfidentialOnly": null}, //input_selection_js: JsValue,
   );
+  const transaction = JSON.parse(transaction_json);
 
   const account_component =
     tari_wallet_lib.get_account_component_address(public_key);
@@ -379,12 +382,13 @@ async function getFreeTestCoins(
   const is_new_account = !accountExists;
 
   // build and sign transaction using the wasm lib
-  const transaction = tari_wallet_lib.create_free_test_coins_transaction(
+  const transaction_json = tari_wallet_lib.create_free_test_coins_transaction(
     is_new_account,
     secret_key,
     BigInt(amount),
     BigInt(fee),
   );
+  const transaction = JSON.parse(transaction_json);
  
   const account_component =
     tari_wallet_lib.get_account_component_address(public_key);
