@@ -32,8 +32,8 @@ nvm use 18
 Then you need to build the WebAssembly library used to build Tari transactions:
 ```shell
 cd tari_wallet_lib
-npm install
-npm run build
+yarn install
+yarn run build
 ```
 
 The snap requires connection to a Tari indexer to access the Tari network. The URL value is configured in the `tari-snap/snap/.env` file, which you need to create by making a copy of the `tari-snap/snap/.env.example` file.
