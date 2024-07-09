@@ -58,12 +58,13 @@ export async function sendTransactionInternal(
   const { secret_key } = await getRistrettoKeyPair(accountIndex);
 
   // build and sign transaction using the wasm lib
-  const transaction = tari_wallet_lib.create_transaction(
+  const transaction_json = tari_wallet_lib.create_transaction(
     secret_key,
     instructions,
     fee_instructions,
     input_refs,
   );
+  const transaction = JSON.parse(transaction_json);
 
   // send the transaction to the indexer
   const submit_method = 'submit_transaction';
