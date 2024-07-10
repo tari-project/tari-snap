@@ -4,7 +4,6 @@ pub mod metadata;
 mod confidential_transfer;
 
 use std::collections::HashMap;
-use std::convert::TryInto;
 use std::str::FromStr;
 
 use component::get_account_address_from_public_key;
@@ -110,7 +109,7 @@ pub fn create_transaction(
         .sign(&account_private_key)
         .build();
 
-    Ok(serde_wasm_bindgen::to_value(&transaction)?)
+    encode_transaction(&transaction)
 }
 
 #[wasm_bindgen]
@@ -174,7 +173,7 @@ pub fn create_transfer_transaction(
         .sign(&source_private_key)
         .build();
 
-    Ok(serde_wasm_bindgen::to_value(&transaction)?)
+    encode_transaction(&transaction)
 }
 
 #[wasm_bindgen]
@@ -278,7 +277,7 @@ pub fn create_free_test_coins_transaction(
         .sign(&account_private_key)
         .build();
 
-    Ok(serde_wasm_bindgen::to_value(&transaction)?)
+    encode_transaction(&transaction)
 }
 
 #[wasm_bindgen]
@@ -326,4 +325,13 @@ pub fn view_vault_balance(
             .collect();
     
     Ok(serde_wasm_bindgen::to_value(&result)?)        
+}
+
+// serde-wasm has some limitations when the structs use the serde's "flatten" macro
+// See https://github.com/RReverser/serde-wasm-bindgen/issues/9 for more context on the problem
+// This causes the transaction being a empty JsValue if we encode it directly with serde_wasm_bindgen
+// So the simplest workaround is to return the transaction as JSON and then parsing it on the snap's TypeScript side
+fn encode_transaction(transaction: &Transaction) -> Result<JsValue, JsError> {
+    let json = serde_json::to_string(&transaction)?;
+    Ok(serde_wasm_bindgen::to_value(&json)?)
 }
