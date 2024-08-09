@@ -14,12 +14,12 @@ pub type ConfidentialProofId = u64;
 #[derive(Debug)]
 struct InputsToSpend {
     pub confidential: Vec<ConfidentialOutputMaskAndValue>,
-    pub proof_id: ConfidentialProofId,
+    pub _proof_id: ConfidentialProofId,
     pub revealed: Amount,
 }
 
 impl InputsToSpend {
-    pub fn total_amount(&self) -> Amount {
+    pub fn _total_amount(&self) -> Amount {
         self.total_confidential_amount() + self.revealed
     }
 
@@ -96,7 +96,7 @@ impl ConfidentialTransferParams {
         }
     }
 
-    pub fn revealed_amount(&self) -> Amount {
+    pub fn _revealed_amount(&self) -> Amount {
         if self.output_to_revealed {
             Amount::new(self.amount)
         } else {
@@ -132,7 +132,7 @@ fn resolved_inputs_for_transfer(
 
             Ok(InputsToSpend {
                 confidential: confidential_inputs,
-                proof_id: 0,
+                _proof_id: 0,
                 revealed: Amount::zero(),
             })
         },
@@ -273,7 +273,6 @@ fn create_confidential_proof_statement(
     account_key: &RistrettoSecretKey,
     dest_public_key: &RistrettoPublicKey,
     confidential_amount: Amount,
-    reveal_amount: Amount,
     resource_view_key: Option<RistrettoPublicKey>,
 ) -> Result<ConfidentialProofStatement, JsError> {
     let mask = if confidential_amount.is_zero() {
@@ -298,7 +297,6 @@ fn create_confidential_proof_statement(
         sender_public_nonce: public_nonce,
         encrypted_data,
         minimum_value_promise: 0,
-        reveal_amount,
         resource_view_key,
     })
 }
@@ -312,7 +310,6 @@ pub fn build_confidential_transfer_transaction(
 
     let amount =  Amount::new(params.amount);
     let confidential_amount = params.confidential_amount();
-    let revealed_amount = params.revealed_amount();
 
     let inputs_to_spend = resolved_inputs_for_transfer(
         SubstateId::Vault(params.source_vault_id),
@@ -330,7 +327,6 @@ pub fn build_confidential_transfer_transaction(
         &params.source_private_key,
         &params.destination_public_key,
         confidential_amount,
-        revealed_amount,
         resource_view_key.clone(),
     )?;
 
@@ -348,7 +344,6 @@ pub fn build_confidential_transfer_transaction(
             &params.source_private_key,
             &params.source_public_key,
             change_confidential_amount,
-            Amount::zero(),
             resource_view_key,
         )?;
     
@@ -358,8 +353,10 @@ pub fn build_confidential_transfer_transaction(
     let proof = create_withdraw_proof(
         &inputs_to_spend.confidential,
         inputs_to_spend.revealed,
-        &output_statement,
-        maybe_change_statement.as_ref()
+        Some(&output_statement),
+        Amount::zero(),
+        maybe_change_statement.as_ref(),
+        Amount::zero()
     )?;
 
     let mut instructions = vec![];

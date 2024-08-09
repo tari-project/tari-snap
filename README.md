@@ -21,7 +21,7 @@ For building the project, Node.js version 18 or superior is required.
 
 First clone the repo
 ```shell
-git clone https://github.com/mrnaveira/tari-snap
+git clone https://github.com/tari-project/tari-snap
 cd tari-snap
 ```
 
