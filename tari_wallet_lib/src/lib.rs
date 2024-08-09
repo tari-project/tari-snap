@@ -19,7 +19,7 @@ use tari_engine_types::resource::Resource;
 use tari_engine_types::substate::SubstateId;
 use tari_engine_types::vault::Vault;
 use tari_template_lib::args;
-use tari_template_lib::constants::XTR_FAUCET_COMPONENT_ADDRESS;
+use tari_template_lib::constants::{XTR_FAUCET_COMPONENT_ADDRESS, XTR_FAUCET_VAULT_ADDRESS};
 use tari_template_lib::models::VaultId;
 use tari_template_lib::prelude::{
     Amount, NonFungibleAddress, ResourceAddress, RistrettoPublicKeyBytes, NonFungibleId,
@@ -243,6 +243,11 @@ pub fn create_free_test_coins_transaction(
     let account_component_address =
         get_account_address_from_public_key(&account_public_key.to_hex())?;
 
+    let mut inputs = vec![
+        SubstateRequirement::unversioned(XTR_FAUCET_COMPONENT_ADDRESS),
+        SubstateRequirement::unversioned(XTR_FAUCET_VAULT_ADDRESS),
+    ];
+
     let mut instructions = vec![
         Instruction::CallMethod {
             component_address: XTR_FAUCET_COMPONENT_ADDRESS,
@@ -260,6 +265,8 @@ pub fn create_free_test_coins_transaction(
             workspace_bucket: Some("free_test_coins".to_string()),
         });
     } else {
+        inputs.push(SubstateRequirement::unversioned(account_component_address));
+
         instructions.push(Instruction::CallMethod
              {
             component_address: account_component_address,
@@ -277,6 +284,7 @@ pub fn create_free_test_coins_transaction(
 
     let transaction = Transaction::builder()
         .with_fee_instructions(instructions.to_vec())
+        .with_inputs(inputs)
         .sign(&account_private_key)
         .build();
 
